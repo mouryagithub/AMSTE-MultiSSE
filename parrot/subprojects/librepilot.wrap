@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://github.com/luhsra/LibrePilot.git
+revision = ecrts26 
+
+depth = 1

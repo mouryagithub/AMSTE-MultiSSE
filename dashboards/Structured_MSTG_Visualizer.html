@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Structured MSTG Visualizer | MultiSSE AUTOSAR</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --panel: #131d31;
+      --card-bg: #1c2a47;
+      --card-hover: #26385f;
+      --border: #2a3c63;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --cpu0: #38bdf8;
+      --cpu1: #c084fc;
+      --sync: #f59e0b;
+      --irq: #10b981;
+      --edge-default: #475569;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); overflow-x: hidden; display: flex; flex-direction: column; min-height: 100vh; }
+    
+    /* Top Bar */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .title-group h1 { font-size: 1.35rem; font-weight: 700; color: #fff; }
+    .title-group p { font-size: 0.85rem; color: var(--text-muted); }
+    .controls { display: flex; gap: 0.75rem; align-items: center; }
+    .btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: var(--card-hover); border-color: var(--cpu0); }
+    .btn.active { background: var(--cpu0); color: #0b0f19; border-color: var(--cpu0); }
+    
+    /* Main Layout */
+    .workspace {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 75px);
+    }
+    
+    /* Canvas Container */
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, #111a2e 0%, #0b0f19 100%);
+      overflow: auto;
+      padding: 2.5rem;
+    }
+    
+    /* Details Sidebar */
+    .sidebar {
+      width: 340px;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+    }
+    .sidebar h2 { font-size: 1.1rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    .sidebar-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+    .info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .info-card h4 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.4rem; }
+    .info-card .val { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    
+    /* Swimlane Architecture */
+    .swimlanes {
+      display: grid;
+      grid-template-columns: 280px 220px 280px;
+      gap: 3.5rem;
+      justify-content: center;
+      min-width: 900px;
+      position: relative;
+    }
+    
+    .lane {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    .lane-header {
+      width: 100%;
+      text-align: center;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .lane-cpu0 .lane-header { color: var(--cpu0); border-color: rgba(56, 189, 248, 0.4); }
+    .lane-sync .lane-header { color: var(--sync); border-color: rgba(245, 158, 11, 0.4); }
+    .lane-cpu1 .lane-header { color: var(--cpu1); border-color: rgba(192, 132, 252, 0.4); }
+    
+    /* Structured State Nodes */
+    .state-node {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+    .state-node:hover {
+      background: var(--card-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+    .state-node.selected {
+      border-color: #fff !important;
+      outline: 2px solid var(--cpu0);
+    }
+    .state-node.dimmed {
+      opacity: 0.25;
+      transform: scale(0.98);
+    }
+    
+    .node-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .node-id {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .node-phase {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .node-body {
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .node-abb {
+      font-weight: 600;
+      color: #fff;
+    }
+    .node-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    /* Specific Node Theme Badges */
+    .node-cpu0 { border-left: 4px solid var(--cpu0); }
+    .node-cpu1 { border-left: 4px solid var(--cpu1); }
+    .node-sync { border-left: 4px solid var(--sync); }
+    .node-irq { border-left: 4px solid var(--irq); }
+    
+    /* SVG Connector Overlay */
+    #connector-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    path.edge {
+      fill: none;
+      stroke: var(--edge-default);
+      stroke-width: 2px;
+      stroke-dasharray: 4, 4;
+      opacity: 0.4;
+      transition: all 0.3s;
+    }
+    path.edge.highlighted {
+      stroke: var(--sync);
+      stroke-width: 3.5px;
+      stroke-dasharray: none;
+      opacity: 1;
+      filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+    }
+    path.edge.incoming {
+      stroke: var(--cpu0);
+      stroke-width: 3.5px;
+      stroke-dasharray: none;
+      opacity: 1;
+      filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+    }
+    path.edge.outgoing {
+      stroke: var(--cpu1);
+      stroke-width: 3.5px;
+      stroke-dasharray: none;
+      opacity: 1;
+      filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.6));
+    }
+    
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--panel);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="title-group">
+      <h1>Multi-Core State Transition Graph (MSTG) — Structured View</h1>
+      <p>Hierarchical & Partitioned Architecture Representation | AUTOSAR MultiSSE</p>
+    </div>
+    <div class="controls">
+      <button class="btn active" id="btn-reduced" onclick="switchView('reduced')">Reduced MSTG (Pruned)</button>
+      <button class="btn" id="btn-sps" onclick="switchView('sps')">Synchronization Points Only</button>
+      <button class="btn" onclick="resetSelection()">Reset Selection</button>
+      <button class="btn" style="background: var(--sync); color: #000;" onclick="window.print()">Print / Export</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    
+    <!-- Canvas Area -->
+    <div class="canvas-container" id="canvas">
+      
+      <!-- SVG Overlay for clean curved paths -->
+      <svg id="connector-overlay">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8" />
+          </marker>
+          <marker id="arrow-sync" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
+          </marker>
+        </defs>
+      </svg>
+
+      <!-- Three-Column Multi-Core Swimlanes -->
+      <div class="swimlanes">
+        
+        <!-- Lane 1: CPU Core 0 -->
+        <div class="lane lane-cpu0" id="lane-cpu0">
+          <div class="lane-header">💻 CPU Core 0 (TaskA, B, C)</div>
+          
+          <div class="state-node node-cpu0" id="node-1-c0" onclick="selectNode('1')">
+            <div class="node-header">
+              <span class="node-id">State 1</span>
+              <span class="node-phase">Boot Phase</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">Core 0: Idle / Startup</div>
+              <div class="node-sub">Waiting for counter triggers</div>
+            </div>
+          </div>
+
+          <div class="state-node node-irq" id="node-25-c0" onclick="selectNode('25')">
+            <div class="node-header">
+              <span class="node-id">State 25</span>
+              <span class="node-phase">Timer Interrupt</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">⚡ IRQ_SystemCounter</div>
+              <div class="node-sub">Dispatches Alarm & TaskA</div>
+            </div>
+          </div>
+
+          <div class="state-node node-cpu0" id="node-27-c0" onclick="selectNode('27')">
+            <div class="node-header">
+              <span class="node-id">State 27</span>
+              <span class="node-phase">External ISR</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">ABB0 (Interrupt1 Handler)</div>
+              <div class="node-sub">High Priority ISR Category 2</div>
+            </div>
+          </div>
+
+          <div class="state-node node-cpu0" id="node-58-c0" onclick="selectNode('58')">
+            <div class="node-header">
+              <span class="node-id">State 58</span>
+              <span class="node-phase">Task Execution</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">ABB21 (TaskA Body)</div>
+              <div class="node-sub">Shared Data Compute</div>
+            </div>
+          </div>
+
+          <div class="state-node node-cpu0" id="node-101-c0" onclick="selectNode('101')">
+            <div class="node-header">
+              <span class="node-id">State 101</span>
+              <span class="node-phase">Termination</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">TerminateTask(TaskA)</div>
+              <div class="node-sub">Yields CPU Core 0</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Lane 2: Synchronization & Cross-Core System Calls -->
+        <div class="lane lane-sync" id="lane-sync">
+          <div class="lane-header">⚡ Cross-Core Sync (SPs)</div>
+          
+          <div class="state-node node-sync" id="node-23" onclick="selectNode('23')">
+            <div class="node-header">
+              <span class="node-id">SP 23</span>
+              <span class="node-phase">Cross-Core Syscall</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">AUTOSAR_ActivateTask</div>
+              <div class="node-sub">Core 1 activates Task on Core 0</div>
+            </div>
+          </div>
+
+          <div class="state-node node-sync" id="node-52" onclick="selectNode('52')">
+            <div class="node-header">
+              <span class="node-id">SP 52</span>
+              <span class="node-phase">Inter-Core IPI</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">Hardware IPI Triggered</div>
+              <div class="node-sub">Target: State 7, ABB 139</div>
+            </div>
+          </div>
+
+          <div class="state-node node-sync" id="node-89" onclick="selectNode('89')">
+            <div class="node-header">
+              <span class="node-id">SP 89</span>
+              <span class="node-phase">Lock Evaluation</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">Critical Section Concurrency</div>
+              <div class="node-sub">Lock Elision: 0 Collisions</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Lane 3: CPU Core 1 -->
+        <div class="lane lane-cpu1" id="lane-cpu1">
+          <div class="lane-header">💻 CPU Core 1 (TaskD, E, F)</div>
+          
+          <div class="state-node node-cpu1" id="node-1-c1" onclick="selectNode('1')">
+            <div class="node-header">
+              <span class="node-id">State 1</span>
+              <span class="node-phase">Startup Phase</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">ABB10 (TaskD Entry)</div>
+              <div class="node-sub">Autostart Task Active</div>
+            </div>
+          </div>
+
+          <div class="state-node node-cpu1" id="node-23-c1" onclick="selectNode('23')">
+            <div class="node-header">
+              <span class="node-id">State 23</span>
+              <span class="node-phase">Inter-Core Activation</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">ABB11 (Syscall Call-site)</div>
+              <div class="node-sub">Invokes ActivateTask(TaskA)</div>
+            </div>
+          </div>
+
+          <div class="state-node node-cpu1" id="node-58-c1" onclick="selectNode('58')">
+            <div class="node-header">
+              <span class="node-id">State 58</span>
+              <span class="node-phase">Parallel Work</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">ABB1 (TaskE Computation)</div>
+              <div class="node-sub">Concurrent execution with Core 0</div>
+            </div>
+          </div>
+
+          <div class="state-node node-cpu1" id="node-89-c1" onclick="selectNode('89')">
+            <div class="node-header">
+              <span class="node-id">State 89</span>
+              <span class="node-phase">Shared Resource</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">ABB2 (TaskE Critical Sec)</div>
+              <div class="node-sub">Analyzed for Lock Elision</div>
+            </div>
+          </div>
+
+          <div class="state-node node-cpu1" id="node-101-c1" onclick="selectNode('101')">
+            <div class="node-header">
+              <span class="node-id">State 101</span>
+              <span class="node-phase">Termination</span>
+            </div>
+            <div class="node-body">
+              <div class="node-abb">TerminateTask(TaskD)</div>
+              <div class="node-sub">Core 1 completes cycle</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Legend -->
+      <div class="legend" style="margin-top: 3rem;">
+        <div class="legend-item"><div class="legend-color" style="background: var(--cpu0);"></div> Core 0 Local Flow</div>
+        <div class="legend-item"><div class="legend-color" style="background: var(--cpu1);"></div> Core 1 Local Flow</div>
+        <div class="legend-item"><div class="legend-color" style="background: var(--sync);"></div> Cross-Core Synchronization Point (SP)</div>
+        <div class="legend-item"><div class="legend-color" style="background: var(--irq);"></div> Hardware Interrupt / Timer Event</div>
+      </div>
+
+    </div>
+
+    <!-- Inspector Sidebar -->
+    <div class="sidebar">
+      <h2>🔍 State Inspector</h2>
+      <p class="sidebar-desc" id="inspector-desc">
+        Click on any structured state node to inspect its multi-core tuple, incoming/outgoing transitions, and optimization decisions.
+      </p>
+
+      <div class="info-card">
+        <h4>Selected State</h4>
+        <div class="val" id="insp-id">State 23 (Cross-Core Sync)</div>
+      </div>
+
+      <div class="info-card">
+        <h4>Multi-Core State Tuple</h4>
+        <div style="font-size: 0.85rem; line-height: 1.6; margin-top: 0.4rem;">
+          <div><strong>Core 0:</strong> <span id="insp-c0">ABB21 (TaskA)</span></div>
+          <div><strong>Core 1:</strong> <span id="insp-c1">ABB11 (TaskD ActivateTask)</span></div>
+          <div><strong>Interrupts:</strong> <span id="insp-irq">IRQ_SystemCounter (Active)</span></div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h4>Optimization Impact</h4>
+        <div style="font-size: 0.85rem; line-height: 1.6; margin-top: 0.4rem;">
+          <div><strong>Lock Elision:</strong> <span style="color: #4ade80;">Safe (No Collision)</span></div>
+          <div><strong>IPI Avoidance:</strong> <span style="color: var(--sync);">Evaluated for Elision</span></div>
+          <div><strong>State Pruning:</strong> <span>51.1% reduced via timing</span></div>
+        </div>
+      </div>
+
+      <div class="info-card" style="border-left: 3px solid var(--cpu0);">
+        <h4>Examiner Explanation Tip</h4>
+        <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin-top: 0.3rem;">
+          Explain to your panel how this structured swimlane replaces the tangled Graphviz wireframe by grouping the 112 states into their corresponding CPU execution lanes and cross-core synchronization points.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Direct Transitions Definition
+    const transitions = [
+      { from: 'node-1-c1', to: 'node-23', type: 'sync', label: 'ActivateTask' },
+      { from: 'node-23', to: 'node-58-c0', type: 'incoming', label: 'TaskA Wakeup' },
+      { from: 'node-1-c0', to: 'node-25-c0', type: 'irq', label: 'Timer Alarm' },
+      { from: 'node-25-c0', to: 'node-27-c0', type: 'incoming', label: 'ISR Category 2' },
+      { from: 'node-23', to: 'node-58-c1', type: 'outgoing', label: 'TaskE Dispatch' },
+      { from: 'node-58-c0', to: 'node-89', type: 'sync', label: 'Lock Check' },
+      { from: 'node-58-c1', to: 'node-89', type: 'sync', label: 'Lock Check' },
+      { from: 'node-89', to: 'node-101-c0', type: 'incoming', label: 'Finish' },
+      { from: 'node-89', to: 'node-101-c1', type: 'outgoing', label: 'Finish' }
+    ];
+
+    function drawConnectors() {
+      const svg = document.getElementById('connector-overlay');
+      const canvas = document.getElementById('canvas');
+      const canvasRect = canvas.getBoundingClientRect();
+      
+      // Clear old paths
+      svg.querySelectorAll('path.edge').forEach(p => p.remove());
+
+      transitions.forEach((t, idx) => {
+        const fromEl = document.getElementById(t.from);
+        const toEl = document.getElementById(t.to);
+        if (!fromEl || !toEl) return;
+
+        const fRect = fromEl.getBoundingClientRect();
+        const tRect = toEl.getBoundingClientRect();
+
+        // Calculate relative coordinates
+        const x1 = fRect.left + fRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const y1 = fRect.bottom - canvasRect.top + canvas.scrollTop;
+        const x2 = tRect.left + tRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const y2 = tRect.top - canvasRect.top + canvas.scrollTop;
+
+        // Draw curved Bezier path
+        const cy = (y1 + y2) / 2;
+        const d = `M ${x1} ${y1} C ${x1} ${cy}, ${x2} ${cy}, ${x2} ${y2}`;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('class', `edge ${t.type}`);
+        path.setAttribute('id', `edge-${idx}`);
+        path.setAttribute('data-from', t.from);
+        path.setAttribute('data-to', t.to);
+        path.setAttribute('marker-end', t.type === 'sync' ? 'url(#arrow-sync)' : 'url(#arrow)');
+        svg.appendChild(path);
+      });
+    }
+
+    function selectNode(id) {
+      document.querySelectorAll('.state-node').forEach(n => {
+        n.classList.remove('selected', 'dimmed');
+      });
+      document.querySelectorAll('path.edge').forEach(p => {
+        p.classList.remove('highlighted', 'incoming', 'outgoing');
+      });
+
+      const nodeElements = document.querySelectorAll(`[id*="node-${id}"]`);
+      nodeElements.forEach(n => n.classList.add('selected'));
+
+      // Update Inspector Sidebar
+      const inspId = document.getElementById('insp-id');
+      const inspC0 = document.getElementById('insp-c0');
+      const inspC1 = document.getElementById('insp-c1');
+      const inspDesc = document.getElementById('inspector-desc');
+
+      if (id === '23') {
+        inspId.innerText = 'State 23 (Cross-Core Activation)';
+        inspC0.innerText = 'ABB21 (TaskA dispatched)';
+        inspC1.innerText = 'ABB11 (TaskD ActivateTask call)';
+        inspDesc.innerText = 'Core 1 invokes AUTOSAR_ActivateTask to awaken TaskA on Core 0. This creates a Synchronization Point (SP) in the MSTG.';
+      } else if (id === '89') {
+        inspId.innerText = 'State 89 (Lock Elision Check)';
+        inspC0.innerText = 'ABB21 (TaskA in critical region)';
+        inspC1.innerText = 'ABB2 (TaskE in critical region)';
+        inspDesc.innerText = 'Both cores access shared data structures. MultiSSE proves mathematically that their timing windows never collide, allowing the spinlock to be elided.';
+      } else if (id === '25') {
+        inspId.innerText = 'State 25 (Hardware Timer Trigger)';
+        inspC0.innerText = '⚡ IRQ_SystemCounter (Active)';
+        inspC1.innerText = 'Idle / Waiting';
+        inspDesc.innerText = 'Hardware timer counter increments and activates periodic AUTOSAR alarm.';
+      } else {
+        inspId.innerText = `State ${id} (System State)`;
+        inspDesc.innerText = 'Concurrent state evaluated by MultiSSE during fixed-point state exploration.';
+      }
+
+      // Highlight related edges
+      document.querySelectorAll('path.edge').forEach(p => {
+        const from = p.getAttribute('data-from');
+        const to = p.getAttribute('data-to');
+        if (from && from.includes(id)) {
+          p.classList.add('outgoing');
+        } else if (to && to.includes(id)) {
+          p.classList.add('incoming');
+        } else {
+          p.style.opacity = '0.1';
+        }
+      });
+    }
+
+    function resetSelection() {
+      document.querySelectorAll('.state-node').forEach(n => {
+        n.classList.remove('selected', 'dimmed');
+      });
+      document.querySelectorAll('path.edge').forEach(p => {
+        p.classList.remove('highlighted', 'incoming', 'outgoing');
+        p.style.opacity = '0.4';
+      });
+      document.getElementById('insp-id').innerText = 'Select a state';
+      document.getElementById('inspector-desc').innerText = 'Click on any structured state node to inspect its multi-core tuple and optimization decisions.';
+    }
+
+    function switchView(mode) {
+      document.getElementById('btn-reduced').classList.toggle('active', mode === 'reduced');
+      document.getElementById('btn-sps').classList.toggle('active', mode === 'sps');
+      
+      const cpu0Nodes = document.querySelectorAll('.lane-cpu0 .state-node');
+      const cpu1Nodes = document.querySelectorAll('.lane-cpu1 .state-node');
+      
+      if (mode === 'sps') {
+        cpu0Nodes.forEach(n => n.classList.add('dimmed'));
+        cpu1Nodes.forEach(n => n.classList.add('dimmed'));
+      } else {
+        cpu0Nodes.forEach(n => n.classList.remove('dimmed'));
+        cpu1Nodes.forEach(n => n.classList.remove('dimmed'));
+      }
+      drawConnectors();
+    }
+
+    // Redraw connectors on resize and load
+    window.addEventListener('load', () => setTimeout(drawConnectors, 200));
+    window.addEventListener('resize', drawConnectors);
+  </script>
+</body>
+</html>

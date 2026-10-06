@@ -1,0 +1,280 @@
+digraph G {
+label="CFG (BBs)";
+subgraph cluster_AUTOSAR_ISR_Interrupt1 {
+label="AUTOSAR_ISR_Interrupt1";
+1 [label=entry, tooltip=<1bcet/wcet: 0 / 0>, shape=oval, color=green];
+2 [label=BB0, tooltip=<2bcet/wcet: 0 / 0>, shape=oval, color=green];
+3 [label=BB1, tooltip=<3bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_test_trace {
+label="test_trace";
+style=filled;
+color="#eeeeee";
+5 [label="", tooltip=<5bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_AUTOSAR_TASK_FUNC_TaskA {
+label="AUTOSAR_TASK_FUNC_TaskA";
+7 [label=entry, tooltip=<7bcet/wcet: 0 / 0>, shape=oval, color=green];
+8 [label=BB2, tooltip=<8bcet/wcet: 0 / 0>, shape=oval, color=green];
+9 [label=BB3, tooltip=<9bcet/wcet: 0 / 0>, shape=oval, color=violet];
+10 [label=BB4, tooltip=<10bcet/wcet: 0 / 0>, shape=box, color=violet];
+11 [label=BB5, tooltip=<11bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_AUTOSAR_TerminateTask {
+label="AUTOSAR_TerminateTask";
+style=filled;
+color="#eeeeee";
+13 [label="", tooltip=<13bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_AUTOSAR_TASK_FUNC_TaskB {
+label="AUTOSAR_TASK_FUNC_TaskB";
+15 [label=entry, tooltip=<15bcet/wcet: 0 / 0>, shape=oval, color=green];
+16 [label=BB6, tooltip=<16bcet/wcet: 0 / 0>, shape=oval, color=green];
+17 [label=BB7, tooltip=<17bcet/wcet: 0 / 0>, shape=oval, color=violet];
+18 [label=BB8, tooltip=<18bcet/wcet: 0 / 0>, shape=box, color=violet];
+19 [label=BB9, tooltip=<19bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_AUTOSAR_TASK_FUNC_TaskC {
+label="AUTOSAR_TASK_FUNC_TaskC";
+21 [label=entry, tooltip=<21bcet/wcet: 0 / 0>, shape=oval, color=green];
+22 [label=BB10, tooltip=<22bcet/wcet: 0 / 0>, shape=oval, color=green];
+23 [label=BB11, tooltip=<23bcet/wcet: 0 / 0>, shape=oval, color=violet];
+24 [label=BB12, tooltip=<24bcet/wcet: 0 / 0>, shape=box, color=violet];
+25 [label=BB13, tooltip=<25bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_AUTOSAR_TASK_FUNC_TaskD {
+label="AUTOSAR_TASK_FUNC_TaskD";
+27 [label=entry, tooltip=<27bcet/wcet: 0 / 0>, shape=oval, color=green];
+28 [label=BB14, tooltip=<28bcet/wcet: 0 / 0>, shape=oval, color=green];
+29 [label=BB15, tooltip=<29bcet/wcet: 0 / 0>, shape=oval, color=violet];
+30 [label=BB16, tooltip=<30bcet/wcet: 0 / 0>, shape=box, color=violet];
+31 [label=BB17, tooltip=<31bcet/wcet: 0 / 0>, shape=oval, color=violet];
+32 [label=BB18, tooltip=<32bcet/wcet: 0 / 0>, shape=box, color=violet];
+33 [label=BB19, tooltip=<33bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_AUTOSAR_ActivateTask {
+label="AUTOSAR_ActivateTask";
+style=filled;
+color="#eeeeee";
+35 [label="", tooltip=<35bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_AUTOSAR_TASK_FUNC_TaskE {
+label="AUTOSAR_TASK_FUNC_TaskE";
+37 [label=entry, tooltip=<37bcet/wcet: 0 / 0>, shape=oval, color=green];
+38 [label=BB20, tooltip=<38bcet/wcet: 0 / 0>, shape=oval, color=green];
+39 [label=BB21, tooltip=<39bcet/wcet: 0 / 0>, shape=oval, color=green];
+40 [label=BB22, tooltip=<40bcet/wcet: 0 / 0>, shape=oval, color=green];
+41 [label=BB23, tooltip=<41bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_AUTOSAR_ShutdownAllCores {
+label="AUTOSAR_ShutdownAllCores";
+style=filled;
+color="#eeeeee";
+43 [label="", tooltip=<43bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_AUTOSAR_TASK_FUNC_TaskF {
+label="AUTOSAR_TASK_FUNC_TaskF";
+45 [label=entry, tooltip=<45bcet/wcet: 0 / 0>, shape=oval, color=green];
+46 [label=BB24, tooltip=<46bcet/wcet: 0 / 0>, shape=oval, color=green];
+47 [label=BB25, tooltip=<47bcet/wcet: 0 / 0>, shape=oval, color=violet];
+48 [label=BB26, tooltip=<48bcet/wcet: 0 / 0>, shape=box, color=violet];
+49 [label=BB27, tooltip=<49bcet/wcet: 0 / 0>, shape=oval, color=violet];
+50 [label=BB28, tooltip=<50bcet/wcet: 0 / 0>, shape=box, color=violet];
+51 [label=BB29, tooltip=<51bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster__Z5startv {
+label="_Z5startv";
+53 [label=entry, tooltip=<53bcet/wcet: 0 / 0>, shape=oval, color=green];
+54 [label=BB30, tooltip=<54bcet/wcet: 0 / 0>, shape=box, color=red];
+55 [label=BB31, tooltip=<55bcet/wcet: 0 / 0>, shape=oval, color=green];
+56 [label="sw.bb", tooltip=<56bcet/wcet: 0 / 0>, shape=oval, color=green];
+57 [label=BB32, tooltip=<57bcet/wcet: 0 / 0>, shape=box, color=red];
+58 [label=BB33, tooltip=<58bcet/wcet: 0 / 0>, shape=oval, color=green];
+59 [label="sw.default", tooltip=<59bcet/wcet: 0 / 0>, shape=oval, color=green];
+60 [label=BB34, tooltip=<60bcet/wcet: 0 / 0>, shape=box, color=red];
+61 [label=BB35, tooltip=<61bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_AUTOSAR_GetCoreID {
+label="AUTOSAR_GetCoreID";
+style=filled;
+color="#eeeeee";
+63 [label="", tooltip=<63bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_AUTOSAR_StartCore {
+label="AUTOSAR_StartCore";
+style=filled;
+color="#eeeeee";
+65 [label="", tooltip=<65bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_AUTOSAR_StartOS {
+label="AUTOSAR_StartOS";
+style=filled;
+color="#eeeeee";
+67 [label="", tooltip=<67bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_main {
+label=main;
+69 [label=entry, tooltip=<69bcet/wcet: 0 / 0>, shape=oval, color=green];
+70 [label=BB36, tooltip=<70bcet/wcet: 0 / 0>, shape=box, color=red];
+71 [label=BB37, tooltip=<71bcet/wcet: 0 / 0>, shape=oval, color=green];
+72 [label="if.then", tooltip=<72bcet/wcet: 0 / 0>, shape=oval, color=green];
+73 [label="if.then.i", tooltip=<73bcet/wcet: 0 / 0>, shape=oval, color=green];
+74 [label=BB38, tooltip=<74bcet/wcet: 0 / 0>, shape=box, color=red];
+75 [label=BB39, tooltip=<75bcet/wcet: 0 / 0>, shape=oval, color=green];
+76 [label="if.end", tooltip=<76bcet/wcet: 0 / 0>, shape=oval, color=green];
+77 [label=BB40, tooltip=<77bcet/wcet: 0 / 0>, shape=box, color=red];
+78 [label=BB41, tooltip=<78bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster___OS_HOOK_DEFINED_ShutdownHook {
+label="__OS_HOOK_DEFINED_ShutdownHook";
+80 [label=entry, tooltip=<80bcet/wcet: 0 / 0>, shape=oval, color=green];
+81 [label=BB42, tooltip=<81bcet/wcet: 0 / 0>, shape=box, color=red];
+82 [label=BB43, tooltip=<82bcet/wcet: 0 / 0>, shape=oval, color=green];
+83 [label="if.then", tooltip=<83bcet/wcet: 0 / 0>, shape=oval, color=green];
+84 [label=BB44, tooltip=<84bcet/wcet: 0 / 0>, shape=box, color=red];
+85 [label=BB45, tooltip=<85bcet/wcet: 0 / 0>, shape=oval, color=green];
+86 [label=BB46, tooltip=<86bcet/wcet: 0 / 0>, shape=box, color=red];
+87 [label=BB47, tooltip=<87bcet/wcet: 0 / 0>, shape=oval, color=green];
+88 [label="if.end", tooltip=<88bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_test_trace_assert {
+label="test_trace_assert";
+style=filled;
+color="#eeeeee";
+90 [label="", tooltip=<90bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_test_finish {
+label="test_finish";
+style=filled;
+color="#eeeeee";
+92 [label="", tooltip=<92bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster_test_prepare {
+label="test_prepare";
+style=filled;
+color="#eeeeee";
+94 [label="", tooltip=<94bcet/wcet: 0 / 0>, shape=box];
+}
+subgraph cluster___ara_fake_entry {
+label="__ara_fake_entry";
+96 [label=entry, tooltip=<96bcet/wcet: 0 / 0>, shape=oval, color=green];
+97 [label=BB48, tooltip=<97bcet/wcet: 0 / 0>, shape=box, color=red];
+98 [label=BB49, tooltip=<98bcet/wcet: 0 / 0>, shape=oval, color=violet];
+}
+subgraph cluster_SystemCounter {
+label=SystemCounter;
+}
+subgraph cluster_SystemCounter_sc {
+label="SystemCounter.sc";
+}
+subgraph cluster_SystemCounter2 {
+label=SystemCounter2;
+}
+subgraph cluster_SystemCounter2_sc {
+label="SystemCounter2.sc";
+}
+subgraph cluster_Interrupt1 {
+label=Interrupt1;
+}
+subgraph cluster_Interrupt1_sc {
+label="Interrupt1.sc";
+}
+1 -> 2 [color=red];
+1 -> 2 [color=blue];
+2 -> 3 [color=red];
+2 -> 3 [color=blue];
+7 -> 8 [color=red];
+7 -> 8 [color=blue];
+8 -> 9 [color=red];
+8 -> 9 [color=blue];
+9 -> 10 [color=red];
+9 -> 10 [color=blue];
+10 -> 11 [color=red];
+10 -> 13 [color=blue];
+13 -> 51 [color=blue];
+13 -> 33 [color=blue];
+13 -> 25 [color=blue];
+13 -> 19 [color=blue];
+13 -> 11 [color=blue];
+15 -> 16 [color=red];
+15 -> 16 [color=blue];
+16 -> 17 [color=red];
+16 -> 17 [color=blue];
+17 -> 18 [color=red];
+17 -> 18 [color=blue];
+18 -> 19 [color=red];
+18 -> 13 [color=blue];
+21 -> 22 [color=red];
+21 -> 22 [color=blue];
+22 -> 23 [color=red];
+22 -> 23 [color=blue];
+23 -> 24 [color=red];
+23 -> 24 [color=blue];
+24 -> 25 [color=red];
+24 -> 13 [color=blue];
+27 -> 28 [color=red];
+27 -> 28 [color=blue];
+28 -> 29 [color=red];
+28 -> 29 [color=blue];
+29 -> 30 [color=red];
+29 -> 30 [color=blue];
+30 -> 31 [color=red];
+30 -> 35 [color=blue];
+31 -> 32 [color=red];
+31 -> 32 [color=blue];
+32 -> 33 [color=red];
+32 -> 13 [color=blue];
+35 -> 49 [color=blue];
+35 -> 31 [color=blue];
+37 -> 38 [color=red];
+37 -> 38 [color=blue];
+38 -> 39 [color=red];
+38 -> 39 [color=blue];
+39 -> 40 [color=red];
+39 -> 40 [color=blue];
+40 -> 41 [color=red];
+40 -> 41 [color=blue];
+45 -> 46 [color=red];
+45 -> 46 [color=blue];
+46 -> 47 [color=red];
+46 -> 47 [color=blue];
+47 -> 48 [color=red];
+47 -> 48 [color=blue];
+48 -> 49 [color=red];
+48 -> 35 [color=blue];
+49 -> 50 [color=red];
+49 -> 50 [color=blue];
+50 -> 51 [color=red];
+50 -> 13 [color=blue];
+53 -> 54 [color=red];
+54 -> 55 [color=red];
+55 -> 56 [color=red];
+55 -> 59 [color=red];
+56 -> 57 [color=red];
+57 -> 58 [color=red];
+58 -> 59 [color=red];
+59 -> 60 [color=red];
+60 -> 61 [color=red];
+69 -> 70 [color=red];
+70 -> 71 [color=red];
+71 -> 72 [color=red];
+71 -> 76 [color=red];
+72 -> 73 [color=red];
+72 -> 76 [color=red];
+73 -> 74 [color=red];
+74 -> 75 [color=red];
+75 -> 76 [color=red];
+76 -> 77 [color=red];
+77 -> 78 [color=red];
+80 -> 81 [color=red];
+81 -> 82 [color=red];
+82 -> 83 [color=red];
+82 -> 88 [color=red];
+83 -> 84 [color=red];
+84 -> 85 [color=red];
+85 -> 86 [color=red];
+86 -> 87 [color=red];
+87 -> 88 [color=red];
+96 -> 97 [color=red];
+97 -> 98 [color=red];
+}

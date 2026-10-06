@@ -1,0 +1,8 @@
+{
+    "spin_states": {},
+    "DEADLOCK": {},
+    "callsites": {},
+    "num_locks": 0,
+    "num_unneeded_locks": 0,
+    "num_unneeded_call_pairs": 0
+}

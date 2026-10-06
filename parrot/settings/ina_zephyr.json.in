@@ -1,0 +1,20 @@
+{
+	"steps": [
+		"InteractionAnalysis"
+	],
+
+	"InteractionAnalysis": {
+		"dump": true
+	},
+
+	"ZephyrStaticPost": {
+		"kconfigfile": "@kconfig_file@"
+	},
+
+
+	"logger": {
+		"StepManager": "info",
+		"Zephyr": "debug",
+		"ara": "info"
+	}
+}

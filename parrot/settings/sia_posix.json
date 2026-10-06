@@ -1,0 +1,18 @@
+{
+	"steps": [
+		"SIA",
+		"DumpCFG",
+		"DumpInstances"
+	],
+
+	"SIA": {
+		"dump": true,
+		"log_level": "debug"
+	},
+
+	"logger": {
+		"StepManager": "info",
+		"POSIX": "debug",
+		"ara": "info"
+	}
+}

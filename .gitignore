@@ -1,0 +1,22 @@
+# Build artifacts & heavy compiled libraries
+build/
+parrot/build/
+*.so
+*.a
+*.o
+*.pyc
+__pycache__/
+subprojects/pyllco/*.so
+subprojects/ara/ara/graph/cgraph/*.so
+subprojects/ara/ara/steps/native/*.so
+subprojects/svf/*.so*
+
+# Large generated raw DOT dumps
+parrot/dumps/*.dot
+parrot/dumps/*.svg
+!parrot/dumps/*structured*.svg
+
+# System & OS temporary files
+.DS_Store
+Thumbs.db
+*.log

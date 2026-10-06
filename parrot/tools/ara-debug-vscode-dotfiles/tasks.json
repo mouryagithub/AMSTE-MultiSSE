@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // Part of ARA VSCode Debug configuration
+        // Create symlink with: ln tools/ara-debug-vscode-dotfiles/tasks.json vscode/.
+        // Can be used to auto-build dependencies to debug later.
+        // Because the debugger only starts ara.py, this tasks provide
+        //  system compilation that is usually done by meson.
+        {
+            "label": "Ninja-Zephyr",
+            "type": "shell",
+            "command": "ninja",
+            "args": [
+                "-C", "${workspaceFolder}/build", "-j", "20",
+                "ara-zephyr-apps@@build-zephyr-apps"
+            ]
+        },
+        {
+            "label": "Ninja Xen-Autosar",
+            "type": "shell",
+            "command": "ninja",
+            "args": [
+                "-C", "${workspaceFolder}/build", "-j", "20",
+                "subprojects/ara/appl/Xen/xen-ara-autosar"
+            ]
+        },
+        {
+            "label": "Ninja all",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                // "Ninja-Zephyr",
+                "Ninja Xen-Autosar"
+            ]
+        }
+    ]
+}

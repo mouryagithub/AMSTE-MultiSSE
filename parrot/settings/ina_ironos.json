@@ -1,0 +1,21 @@
+{
+	"steps": [
+		"InteractionAnalysis",
+		"DumpInstances",
+		"DumpCFG"
+	],
+
+	"InteractionAnalysis": {
+		"dump": true
+	},
+
+	"ISRSearch": {
+		"mixed_method_fail": false
+	},
+
+	"logger": {
+		"StepManager": "info",
+		"FreeRTOS": "debug",
+		"ara": "info"
+	}
+}

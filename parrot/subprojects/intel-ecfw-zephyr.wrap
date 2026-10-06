@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://github.com/luhsra/intel-ecfw-zephyr.git
+revision = ecrts26 
+
+depth = 1
