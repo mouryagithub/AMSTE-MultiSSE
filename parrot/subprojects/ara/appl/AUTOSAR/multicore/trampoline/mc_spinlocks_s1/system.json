@@ -1,0 +1,59 @@
+{
+  "cpus": [
+    {
+      "id": 0,
+      "tasks": {
+        "t1": {
+          "activation": 1,
+          "autostart": true,
+          "priority": 1,
+          "schedule": false,
+          "spinlocks": ["lock_task", "lock_isr", "already_taken", "not_successor", "sync0"]
+        }
+      },
+      "resources": {},
+      "events": {},
+    "alarms": {},
+    "counters": {
+      "SystemCounter_core0": {
+        "mincycle": 1,
+        "maxallowedvalue": 1000,
+        "ticksperbase": 1
+      }
+    },
+    "isrs": {}
+    }, {
+      "id": 1,
+      "tasks": {
+        "t2": {
+          "activation": 1,
+          "autostart": false,
+          "priority": 1,
+          "schedule": false,
+          "spinlocks": ["lock_task", "lock_isr", "already_taken", "not_successor", "sync0"]
+        }
+      },
+      "resources": {},
+      "events": {},
+      "alarms": {},
+      "counters": {
+        "SystemCounter_core1": {
+          "mincycle": 1,
+          "maxallowedvalue": 1000,
+          "ticksperbase": 1
+        }
+      },
+      "isrs": {
+        "softwareInterruptHandler0_Core1": {"priority": 1, "category": 2, "device": 40}
+      }
+    }
+  ],
+  "spinlocks": [
+    ["lock_task", "lock_isr"],
+    ["lock_task", "sync0"],
+    ["lock_isr", "sync0"],
+    ["already_taken", "sync0"],
+    ["not_successor", "sync0"],
+    ["sync0"]
+  ]
+}

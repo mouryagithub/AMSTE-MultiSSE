@@ -1,0 +1,43 @@
+{
+    "instances": {
+        "num": 5,
+        "type": {
+            "Task": {
+                "found": 4
+            },
+            "Mutex": {
+                "found": 1
+            }
+        }
+    },
+    "interactions": {
+        "num": 4,
+        "to_instance_type": {
+            "Mutex": {
+                "found": 4,
+                "missing": 0,
+                "missing_imprecise": 0
+            },
+            "Task": {
+                "found": 0,
+                "missing": 0,
+                "missing_imprecise": 0
+            }
+        },
+        "accumulate_number_field": {
+            "to_instance_type": {
+                "Mutex": {
+                    "found": 4,
+                    "missing": 0,
+                    "missing_imprecise": 0
+                },
+                "Task": {
+                    "found": 0,
+                    "missing": 0,
+                    "missing_imprecise": 0
+                }
+            }
+        },
+        "undetected": 0
+    }
+}

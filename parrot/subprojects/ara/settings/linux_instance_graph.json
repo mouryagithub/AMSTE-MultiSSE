@@ -1,0 +1,44 @@
+{
+	"steps": [
+		"InteractionAnalysis"
+	],
+
+	"POSIXInit": {
+		"system_profile": "Linux",
+		"enable_musl_syscalls": true
+	},
+
+	"InteractionAnalysis": {
+		"dump": true,
+		"log_level": "info"
+	},
+
+	"RemoveSysfuncBody": {
+		"log_level": "debug",
+		"drop_llvm_suffix": false
+	},
+
+	"SystemRelevantFunctions": {
+		"dump": true
+	},
+
+	"CallGraph": {
+		"dump": true
+	},
+
+	"ResolveFunctionPointer": {
+		"log_level": "debug"
+	},
+
+    "IRReader": {
+        "no_sysfunc_body": true
+    },
+
+	"ICFG": {
+		"dump": true
+	},
+
+	"logger": {
+		"POSIX": "debug"
+	}
+}

@@ -1,0 +1,51 @@
+// SPDX-FileCopyrightText: 2013-2014 Florian Lukas <florian.lukas@gmail.com>
+// SPDX-FileCopyrightText: 2013-2014 Martin Hoffmann <hoffmann@cs.fau.de>
+// SPDX-FileCopyrightText: 2013-2019 Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
+// SPDX-FileCopyrightText: 2023 Andreas Kässens
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#include "machine.h"
+#include "os.h"
+
+/**
+ * \brief Methods for interrupt disabling/enabling. This pair cannot
+ *        be stacked.
+ **/
+
+/**
+ * \brief Same as disable/enable but can be stacked.
+ **/
+static int __all_isr_count;
+static int __os_isr_count;
+
+extern "C" void AUTOSAR_DisableAllInterrupts();
+extern "C" void AUTOSAR_EnableAllInterrupts();
+
+void AUTOSAR_SuspendAllInterrupts() {
+	debug_core << __FUNCTION__ << endl;
+	AUTOSAR_DisableAllInterrupts();
+	__all_isr_count++;
+}
+
+void AUTOSAR_ResumeAllInterrupts() {
+	debug_core << __FUNCTION__ << endl;
+	__all_isr_count--;
+	if (__all_isr_count == 0 && __os_isr_count == 0) {
+		AUTOSAR_EnableAllInterrupts();
+	}
+}
+
+void AUTOSAR_SuspendOSInterrupts() {
+	debug_core << __FUNCTION__ << endl;
+	AUTOSAR_DisableAllInterrupts();
+	__os_isr_count++;
+}
+
+void AUTOSAR_ResumeOSInterrupts() {
+	debug_core << __FUNCTION__ << endl;
+	__os_isr_count--;
+	if (__os_isr_count == 0 && __all_isr_count == 0) {
+		AUTOSAR_EnableAllInterrupts();
+	}
+}

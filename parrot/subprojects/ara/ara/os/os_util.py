@@ -1,0 +1,610 @@
+# SPDX-FileCopyrightText: 2021 Bastian Fuhlenriede
+# SPDX-FileCopyrightText: 2021 Lukas Berg
+# SPDX-FileCopyrightText: 2022 Gerion Entrup <entrup@sra.uni-hannover.de>
+# SPDX-FileCopyrightText: 2022 Jan Neugebauer
+# SPDX-FileCopyrightText: 2023 Andreas Kässens
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import collections
+import os.path
+import typing
+import dataclasses
+import html
+import pyllco
+from abc import ABC, abstractmethod
+
+from enum import Enum
+from typing import Any, Tuple
+from copy import copy
+
+from ara.graph import SyscallCategory as _SyscallCategory, SigType as _SigType
+from ara.graph import CFType as _CFType, CFGView as _CFGView
+from ara.steps.util import current_step
+
+from .os_base import ExecState, OSState
+
+from ara.util import get_logger
+logger = get_logger("OS_UTIL")
+
+
+class AutoDotInstance(ABC):
+    """This class auto implements as_dot() and get_maximal_id().
+
+    Instances that inherit from this class must implement wanted_attrs() and
+    dot_appearance() to describe the dot printing."""
+    @property
+    @abstractmethod
+    def wanted_attrs(self) -> list:     # list[str]
+        """Return all attributes as strings that are relevant to be printed as dot.
+
+        This attribute will influence as_dot() and get_maximal_id().
+        """
+
+    @property
+    @abstractmethod
+    def dot_appearance(self) -> dict:   # dict[str, str]
+        """Return dot rendering properties.
+
+        Make sure to provide the following properties:
+            "shape": e.g. "box"
+            "fillcolor": e.g. "#6fbf87"
+            "style": e.g. "filled"
+        """
+
+    def as_dot(self):
+        attrs = [(x, str(getattr(self, x))) for x in self.wanted_attrs]
+        sublabel = '<br/>'.join([f"<i>{k}</i>: {html.escape(v)}"
+                                 for k, v in attrs])
+
+        self.dot_appearance["sublabel"] = sublabel
+        return self.dot_appearance
+
+    def get_maximal_id(self):
+        max_id_components = list(map(lambda obj_name: getattr(self, obj_name), self.wanted_attrs))
+        max_id_components.append(self.__class__.__name__)
+        return '.'.join(map(str, max_id_components))
+
+
+class UnsuitableArgumentException(Exception):
+    """The argument contains a value that is not suitable."""
+
+
+@dataclasses.dataclass(frozen=True)
+class UnknownArgument:
+    """A wrapper class to indicate that an argument cannot be found.
+
+    The specific reason is stored in the exception.
+    """
+    exception: Exception
+    value: pyllco.Value
+
+    def __bool__(self):
+        """Allow `if self:`"""
+        return False
+
+    def __str__(self):
+        return "@unknown@"
+
+
+@dataclasses.dataclass(unsafe_hash=True)
+class DefaultArgument:
+    """A wrapper class to indicate that an argument for an instance is not set.
+
+    If value is not modified the encapsulated value is holding simply <default>.
+    You can modify the default value as you wish.
+    """
+    def __init__(self, default_value="<default>"):
+        self.value = default_value
+
+    def __str__(self):
+        return str(self.value)
+
+
+@dataclasses.dataclass(unsafe_hash=True)
+class LikelyArgument:
+    """Represents the likely attribute.
+
+    The likely attribute means:
+    It is not sure that the variable has this value but it is likely.
+    """
+    def __init__(self, likely_value):
+        self.value = likely_value
+
+    def __str__(self):
+        return f"<likely: {self.value}>"
+
+
+def is_llvm_type(ty):
+    return getattr(ty, '__module__', None) == pyllco.__name__
+
+
+def get_argument(value, arg):
+    """Retrieve an interpreted argument.
+
+    Arguments:
+    value -- LLVM raw value
+    arg   -- Argument for this value
+    """
+
+    def check_ty(lvalue, ty):
+        if isinstance(ty, collections.abc.Container):
+            if type(lvalue) in ty:
+                return lvalue
+            else:
+                raise UnsuitableArgumentException(f"Value type {type(lvalue)} does not match wanted types {ty}.")
+        else:
+            if ty == typing.Any or type(lvalue) == ty:
+                return lvalue
+            else:
+                raise UnsuitableArgumentException(f"Value type {type(lvalue)} does not match wanted type {ty}.")
+
+    if isinstance(arg.ty, collections.abc.Container):
+        return check_ty(value.value, arg.ty)
+    if isinstance(arg.ty, type) and arg.ty != typing.Any and issubclass(arg.ty, pyllco.Value):
+        return check_ty(value.value, arg.ty)
+    if arg.ty != typing.Any and arg.hint == _SigType.instance:
+        return check_ty(value.value, arg.ty)
+    if arg.raw_value:
+        return value
+    if value is None:
+        return None
+    if isinstance(value.value, pyllco.ConstantPointerNull):
+        check_ty(value.value, arg.ty)
+        return "nullptr"
+    if isinstance(value.value, pyllco.Constant):
+        return check_ty(value.value.get(attrs=value.attrs), arg.ty)
+    raise UnsuitableArgumentException(
+        "Value cannot be interpreted as Python value")
+
+
+@dataclasses.dataclass
+class Argument:
+    """Class that captures an argument.
+
+    name must be given. It is the field name of the args argument.
+    If hint is SigType.symbol or SigType.instance raw_value is automatically
+    true.
+    """
+    name: str
+    ty: typing.Any = typing.Any
+    # WARNING: raw_value must come _before_ hint, since hint modifies raw_value
+    raw_value: bool = False
+    hint: _SigType = _SigType.value
+    optional: bool = False  # Set this to True if this argument is an optional argument for the syscall.
+
+    def get_hint(self) -> _SigType:
+        return self._hint
+
+    def set_hint(self, nhint: _SigType):
+        if nhint in [_SigType.symbol, _SigType.instance]:
+            self.raw_value = True
+        self._hint = nhint
+
+
+Argument.hint = property(Argument.get_hint, Argument.set_hint)
+Arg = Argument
+
+
+def set_next_abb(state: OSState, cpu_id: int) -> None:
+    """Set the CPU specified with cpu_id to the next abb.
+
+    Note: Call this functions on syscalls only.
+    """
+    # for HyperSSE states find right CFG
+    if state.system_count:
+        cfg = state.cpus[cpu_id].cfg
+        lcfg = _CFGView(cfg, efilt=cfg.ep.type.fa == _CFType.lcf)
+    else:
+        cfg = state.cfg
+        lcfg = _CFGView(state.cfg, efilt=state.cfg.ep.type.fa == _CFType.lcf)
+    cpu = state.cpus[cpu_id]
+    for idx, next_abb in enumerate(lcfg.vertex(cpu.abb).out_neighbors()):
+        if idx > 1:
+            raise RuntimeError(
+                "A syscall must not have more than one successor.")
+        cpu.abb = int(next_abb)
+        cpu.exec_state = ExecState.from_abbtype(cfg.vp.type[next_abb])
+
+
+class Parenthesis(Enum):
+    LEFT = 1
+    RIGHT = 2
+
+
+_argument_value_cache = {"last_added": []}
+def _get_cached_argument_value(va, cpu_id: int, abb, idx, callpath, hint) -> Any:
+    CACHE_LENGTH = 5
+
+    def _shorten_callpath(callpath, length):
+        short_cp = copy(callpath)
+        while len(short_cp) > length:
+            short_cp.pop_front()
+
+    key = (cpu_id, int(abb), idx, hint)
+    cp_length, s_cache = _argument_value_cache.get(key, (-1, None))
+    if cp_length != -1:
+        short_cp = _shorten_callpath(callpath, cp_length)
+        result = s_cache.get(short_cp, None)
+        if result:
+            # logger.debug("Cache Hit")
+            return result
+    result = va.get_argument_value(abb, idx, callpath=callpath, hint=hint)
+    cp_length = result.stats.maximal_depth
+    if s_cache is None:
+        s_cache = {}
+        _argument_value_cache[key] = (cp_length, s_cache)
+        la = _argument_value_cache["last_added"]
+        la.append(key)
+        if len(la) > CACHE_LENGTH:
+            del _argument_value_cache[la.pop(0)]
+    short_cp = _shorten_callpath(callpath, cp_length)
+    s_cache[short_cp] = result
+    return result
+
+
+def _clear_cache():
+    _argument_value_cache.clear()
+    _argument_value_cache["last_added"] = []
+
+
+class SysCall:
+    """Defines a system call.
+
+    A system call consists of a several attributes:
+    1. func_body: The function that is called to interpret this system call.
+    2. categories: The categories of this system call.
+    3. signature: The arguments of the system call.
+
+    A Syscall objects acts like a (static) function and can be called.
+    """
+
+    def __init__(self,
+                 aliases,
+                 atomic,
+                 categories,
+                 custom_control_flow,
+                 func_body,
+                 is_stub,
+                 isr_call,
+                 name,
+                 parenthesis,
+                 signal_safe,
+                 signature):
+        # visible attributes
+        self.syscall = True
+        self._func = func_body
+        self.name = name if name is not None else func_body.__name__
+
+        self._ccf = custom_control_flow
+        self._signature = signature
+        self.aliases = aliases
+        self.atomic = atomic
+        self.categories = categories
+        self.is_stub = is_stub
+        self.isr_call = isr_call
+        self.parenthesis = parenthesis
+        self.signal_safe = signal_safe
+
+    def get_name(self):
+        """Returns the name of the syscall function."""
+        return self.name
+
+    def __get__(self, obj, objtype=None):
+        """Simulate bound descriptor access. However a systemcall acts like a
+        static method so just return itself here."""
+        return self
+
+    def __call__(self, graph, state, cpu_id, sig_offset=0):
+        """Interpret the system call.
+
+        In principal, this function performs a value analysis, then calls
+        func_body with the retrieved arguments, takes a new state back from
+        func_body and follows the normal control flow patterns if wanted.
+
+        In particular func_body is called with this arguments:
+        graph  -- the system graph
+        state  -- the OS state
+        cpu_id -- the cpu_id that should be interpreted
+        args   -- A special args object, that contains the retrieved arguments.
+                  It has as fields the attribute names that are given by the
+                  Argument tuple.
+        va     -- The value analyzer.
+
+        Arguments:
+        graph       -- the graph object
+        state       -- the OS state
+        cpu_id      -- the cpu_id that should be interpreted
+        sig_offset  -- offset at which position the signature for the syscall
+                       function starts. The default value is 0. Do not set
+                       this value unless you have at least one argument at the
+                       beginning that does not belong to the syscall signature.
+        """
+        if _SyscallCategory.undefined in self.categories:
+            raise NotImplementedError(f"{self._func.__name__} is only a stub.")
+
+        # avoid dependency conflicts, therefore import dynamically
+        from ara.steps import get_native_component
+        ValueAnalyzer = get_native_component("ValueAnalyzer")
+        ValuesUnknown = get_native_component("ValuesUnknown")
+
+        logger.info(f"Syscall analysis of cpu_id: {cpu_id} and graph: {graph}")
+
+        class CachingValueAnalyzer(ValueAnalyzer):
+            def get_argument_value(self, cpu_id, abb, idx, callpath=None, hint=None):
+                return _get_cached_argument_value(super(), cpu_id, abb, idx, callpath, hint)
+
+            def assign_system_object(self, value, instance, offset, callpath):
+                _clear_cache()
+                return super().assign_system_object(value, instance, offset, callpath)
+
+        va = CachingValueAnalyzer(
+            graph,
+            current_step.tracer if hasattr(current_step, "tracer") else None)
+
+        # copy the original state
+        new_state = state.copy()
+
+        fields = []
+        values = []
+
+        abb = new_state.cpus[cpu_id].abb
+        callpath = new_state.cpus[cpu_id].call_path
+
+        # retrieve arguments
+        for idx, arg in enumerate(self._signature):
+            fields.append((arg.name, arg.ty))
+            hint = arg.hint
+            if arg.hint == _SigType.instance:
+                hint = _SigType.symbol
+            try:
+                result = va.get_argument_value(
+                    cpu_id,
+                    abb,
+                    idx + sig_offset,
+                    callpath=callpath,
+                    hint=hint
+                )
+            except ValuesUnknown as e:
+                values.append(UnknownArgument(exception=e, value=None))
+                continue
+            try:
+                values.append(get_argument(result, arg))
+            except (UnsuitableArgumentException, pyllco.InvalidValue) as e:
+                values.append(UnknownArgument(exception=e, value=result))
+
+        # repack into dataclass
+        Arguments = dataclasses.make_dataclass('Arguments', fields)
+        args = Arguments(*values)
+
+        #store arguments in syscall abb
+        graph.cfg.vp.arguments[abb] = args
+
+        # syscall specific handling
+        new_states = self._func(graph, new_state, cpu_id, args, va)
+        assert new_states is not None, (f"The syscall {self.name} does not "
+                                        "return anything.")
+
+        # few syscalls return multiple follow up states, so wrap everything
+        # into a list, if not already done
+        if not isinstance(new_states, list):
+            new_states = [new_states]
+
+        # add standard control flow successors if wanted
+        if not self._ccf:
+            for new_state in new_states:
+                set_next_abb(new_state, cpu_id)
+
+        return new_states
+
+
+def syscall(*args,
+            aliases: Tuple[str] = None,
+            atomic: bool = True,
+            categories: Tuple[_SyscallCategory] = None,
+            custom_control_flow: bool = False,
+            is_stub: bool = False,
+            isr_call: bool = False,
+            name: str = None,
+            parenthesis: Parenthesis = None,
+            signal_safe: bool = False,
+            signature: Tuple[Argument] = None):
+    """System call decorator. Changes a function into a system call.
+
+    Returns a Syscall object. See it's documentation for more information.
+
+    Arguments:
+    aliases             -- Alias names of the system call.
+    atomic              -- Is the syscall self contained or part of a group of
+                           syscalls? (default: True)
+                           A syscall that creates an instance but does not
+                           configure it, is not atomic for example.
+    categories          -- Categories of the system call
+    custom_control_flow -- Does this system call alter the control flow?
+    isr_call            -- Is this a syscall coming from an ISR
+                           (default: False)
+    name                -- The name of the syscall.
+                           If not set, the name of the syscalls equals the
+                           name of the decorated function.
+    parenthesis         -- Must this syscall happen pairwise and on which
+                           position (left/right), such as open/close,
+                           lock/unlock (default: None).
+    signal_safe         -- Is it safe to call the syscall in a signal handler?
+                           (default: False)
+    signature           -- Specification of all system call arguments
+    """
+    if categories is None:
+        categories = {_SyscallCategory.undefined}
+    if signature is None:
+        signature = []
+    if aliases is None:
+        aliases = []
+
+    outer_aliases = aliases
+    outer_atomic = atomic
+    outer_categories = categories
+    outer_ccf = custom_control_flow
+    outer_is_stub = is_stub
+    outer_isr_call = isr_call
+    outer_name = name
+    outer_parenthesis = parenthesis
+    outer_signal_safe = signal_safe
+    outer_signature = signature
+
+    def wrap(func,
+             aliases=outer_aliases,
+             atomic=outer_atomic,
+             categories=outer_categories,
+             custom_control_flow=outer_ccf,
+             is_stub=outer_is_stub,
+             isr_call=outer_isr_call,
+             name=outer_name,
+             parenthesis=outer_parenthesis,
+             signal_safe=outer_signal_safe,
+             signature=outer_signature):
+        wrapper = SysCall(aliases=aliases,
+                          atomic=atomic,
+                          categories=categories,
+                          custom_control_flow=custom_control_flow,
+                          func_body=func,
+                          is_stub=is_stub,
+                          isr_call=isr_call,
+                          name=name,
+                          parenthesis=parenthesis,
+                          signal_safe=signal_safe,
+                          signature=signature)
+        return wrapper
+
+    if len(args) == 1 and callable(args[0]):
+        # decorator was called without keyword arguments, first argument is the
+        # function, return a replacement function for the decorated function
+        func = wrap(func=args[0],
+                    categories=categories,
+                    signature=signature,
+                    custom_control_flow=custom_control_flow,
+                    aliases=aliases,
+                    name=name,
+                    signal_safe=signal_safe,
+                    parenthesis=parenthesis,
+                    isr_call=isr_call,
+                    atomic=atomic,
+                    is_stub=True)
+        return func
+
+    # decorator was called with keyword arguments, the returned function is
+    # called with the decorated function and its result replaces the decorated
+    # function
+    return wrap
+
+
+def assign_id(instances, instance):
+    """Assign the shortest unique prefix ID to instance.
+
+    This function uses instance.get_maximal_id() to assign the shortest unique
+    prefix ID to this instance. If other instance IDs needs update they are
+    updated.
+
+    Example:
+        Instance | ID  | Maximal ID
+        ---------|-----|-----------
+        I1       | 1.2 | 1.2.3.4
+        I2       | 2   | 2.1.1
+        I3       | 1.3 | 1.3.1.2.1
+
+    Now Instance I4 with the maximal ID 1.3.1.1.1 should be added. The algorithm
+    then assigns the ID 1.3.1.1 to I4 and 1.3.1.2 to I3.
+    """
+    other_ids = [(instances.vp.id[x].split('.'), x)
+                 for x in instances.vertices() if x != instance]
+
+    target_id = instances.vp.obj[instance].get_maximal_id().split('.')
+
+    longest = 0
+    must_be_longer = None
+    for other_id, inst in other_ids:
+        prefix = os.path.commonprefix([target_id, other_id])
+        assert prefix != target_id, f"Cannot find a unique id: {prefix}"
+        longest = max(longest, len(prefix))
+        if len(prefix) == len(other_id):
+            assert must_be_longer is None, "Something went wrong."
+            must_be_longer = inst
+
+    if must_be_longer:
+        other_id = instances.vp.obj[must_be_longer].get_maximal_id().split('.')
+        prefix = os.path.commonprefix([target_id, other_id])
+        assert prefix != target_id and prefix != other_id, f"Cannot find a unique id: {prefix}"
+        longest = len(prefix)
+        instances.vp.id[must_be_longer] = '.'.join(other_id[:longest + 1])
+
+    instances.vp.id[instance] = '.'.join(target_id[:longest + 1])
+
+
+def find_return_value(abb, callpath, va):
+    """Try to retrieve the best possible return value.
+
+    The function first get the raw return value (the next store) and try to
+    follow it back to the original value.
+
+    Arguments:
+    abb      -- The call instruction which return value should be retrieved.
+    callpath -- The call context.
+    va.      -- A ValueAnalyzer instance.
+
+    Returns a ValueAnalyzerResult with empty attrs.
+    """
+    from ara.steps import get_native_component
+    ValuesUnknown = get_native_component("ValuesUnknown")
+    ValueAnalyzerResult = get_native_component("ValueAnalyzerResult")
+
+    ret_val = va.get_return_value(abb, callpath=callpath)
+    try:
+        return va.get_memory_value(ret_val, callpath=callpath)
+    except ValuesUnknown:
+        return ValueAnalyzerResult(ret_val, tuple(), None, callpath, None)
+
+
+def connect_instances(instance_graph, src, tgt, abb, label, ty=None):
+    src = instance_graph.vertex(src)
+    tgt = instance_graph.vertex(tgt)
+    # filter same interactions
+    existing = instance_graph.edge(src, tgt, all_edges=True)
+    for edge in existing:
+        if all([instance_graph.ep[x][edge] == y for x, y in
+                [("syscall", abb),
+                 ("label", label),
+                 ("type", (0 if ty is None else ty))]]):
+            instance_graph.ep.quantity[edge] += 1
+            return
+
+    e = instance_graph.add_edge(src, tgt)
+    instance_graph.ep.syscall[e] = abb
+    instance_graph.ep.label[e] = label
+    instance_graph.ep.quantity[e] = 1
+    if ty is not None:
+        instance_graph.ep.type[e] = ty
+
+
+def connect_from_here(state, cpu_id, tgt, label, ty=None):
+    """Connect the current instance with tgt.
+
+    The current instance is specified by the current state and the active cpu.
+    """
+    cpu = state.cpus[cpu_id]
+    connect_instances(state.instances,
+                      cpu.control_instance,
+                      tgt,
+                      cpu.abb,
+                      label,
+                      ty=ty)
+
+
+def add_self_edge(state, cpu_id, label, ty=None):
+    cpu = state.cpus[cpu_id]
+    connect_from_here(state, cpu_id, cpu.control_instance, label, ty)
+
+
+def find_instance_node(instances, obj):
+    for ins in instances.vertices():
+        if instances.vp.obj[ins] is obj:
+            return ins
+    raise RuntimeError(f"Instance {obj} could not be found.")

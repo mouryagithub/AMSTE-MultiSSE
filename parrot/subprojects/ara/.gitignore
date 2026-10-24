@@ -1,0 +1,10 @@
+.cache
+/build
+__pycache__
+/native.txt
+.idea/
+.meson-subproject-wrap-hash.txt
+test/**/*.csv
+test/**/*.png
+test/xen-eval/HyperSSE*
+test/xen-eval/MCAnalyzer*

@@ -1,0 +1,34 @@
+{
+  "_Z15__decl_all_taskv": {
+    "syscalls": 0,
+    "calls": 0
+  },
+  "_Z8do_stuffii": {
+    "syscalls": 0,
+    "calls": 0
+  },
+  "_Z14other_functioni": {
+    "syscalls": 0,
+    "calls": 0
+  },
+  "_Z20syscall_calling_funcv": {
+    "syscalls": 1,
+    "calls": 0
+  },
+  "_Z6vTask1Pv": {
+    "syscalls": 0,
+    "calls": 0
+  },
+  "main": {
+    "syscalls": 3,
+    "calls": 1
+  },
+  "_Z6vTask2Pv": {
+    "syscalls": 0,
+    "calls": 1
+  },
+  "__ara_fake_entry": {
+    "syscalls": 0,
+    "calls": 1
+  }
+}

@@ -1,0 +1,845 @@
+autosar_includes += ['-I', meson.current_source_dir() / 'source' / 'os']
+
+llvm_link_cmd = toolchains.get_variable('llvm_link_cmd')
+
+scp = find_program('scp')
+ssh = find_program('ssh')
+
+
+# -----------------------------------------------------------------------------------------------
+# Collect autosar_apps 
+autosar_apps = [
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm1',    'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm1',    'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm1',    'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json'}, 
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm1',    'name': 'd',                     'oil': 'system.json', 'mtrace': 'd.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm1',    'name': 'e',                     'oil': 'system.json', 'mtrace': 'e.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm1',    'name': 'f',                     'oil': 'system.json', 'mtrace': 'f.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm2',    'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm2',    'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm2',    'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm3',    'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm3',    'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm3',    'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm3',    'name': 'd',                     'oil': 'system.json', 'mtrace': 'd.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'alarm3',    'name': 'e',                     'oil': 'system.json', 'mtrace': 'e.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'complex1',  'name': 'a',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'complex1',  'name': 'b',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'complex1',  'name': 'c',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'complex1',  'name': 'd',                     'oil': 'system.json', 'synthesis_disabled': ['posix']},
+  {'core': 'singlecore', 'path': 'bcc1' / 'complex2',  'name': 'a',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'counter1',  'name': 'a',                     'oil': 'system.json'},
+ #{'core': 'singlecore', 'path': 'bcc1' / 'depsvc',    'name': 'depsvc',                'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'hoffmann',  'name': 'a',                     'oil': 'system.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'singlecore', 'path': 'bcc1' / 'isr2',      'name': 'a',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'isr2',      'name': 'b',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'isr2',      'name': 'c',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'isr2',      'name': 'd',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'isr2',      'name': 'e',                     'oil': 'system.json', 'synthesis_disabled': ['posix']},
+  {'core': 'singlecore', 'path': 'bcc1' / 'lukas',     'name': 'alarmstress',           'oil': 'alarmstress.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'singlecore', 'path': 'bcc1' / 'lukas',     'name': 'dispatch',              'oil': 'dispatch.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'singlecore', 'path': 'bcc1' / 'lukas',     'name': 'isr2',                  'oil': 'isr2.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'singlecore', 'path': 'pairwise',           'name': 'pairwise',              'oil': 'system.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'singlecore', 'path': 'pairwise',           'name': 'pairwise-fail',              'oil': 'system.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'd',                     'oil': 'system.json', 'mtrace': 'd.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'e',                     'oil': 'system.json', 'mtrace': 'e.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'f',                     'oil': 'system.json', 'mtrace': 'f.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'g',                     'oil': 'system.json', 'mtrace': 'g.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'h',                     'oil': 'system.json', 'mtrace': 'h.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'j',                     'oil': 'system.json', 'mtrace': 'j.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'k',                     'oil': 'system.json', 'mtrace': 'k.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource1', 'name': 'l',                     'oil': 'system.json', 'mtrace': 'l.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource2', 'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'resource2', 'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'sse1',      'name': 'a',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'sse1',      'name': 'b',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'sse1',      'name': 'c',                     'oil': 'system.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task1',     'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task1',     'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task1',     'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task1',     'name': 'd',                     'oil': 'system.json', 'mtrace': 'd.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task1',     'name': 'e',                     'oil': 'system.json', 'mtrace': 'e.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task1',     'name': 'f',                     'oil': 'system.json', 'mtrace': 'f.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task1',     'name': 'g',                     'oil': 'system.json', 'mtrace': 'g.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task2',     'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task2',     'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'bcc1' / 'task2',     'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json'},
+  {'core': 'singlecore', 'path': 'complex',            'name': 'copter-without-alarms', 'oil': 'system-without-alarms.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'singlecore', 'path': 'complex',            'name': 'isorc',                 'oil': 'isorc.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'singlecore', 'path': 'ecc1' / 'bt1',       'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'bt1',       'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'bt1',       'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'bt1',       'name': 'd',                     'oil': 'system.json', 'mtrace': 'd.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'bt1',       'name': 'e',                     'oil': 'system.json', 'mtrace': 'e.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'bt1',       'name': 'f',                     'oil': 'system.json', 'mtrace': 'f.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'bt1',       'name': 'g',                     'oil': 'system.json', 'mtrace': 'g.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'bt1',       'name': 'h',                     'oil': 'system.json', 'mtrace': 'h.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'event1',    'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'event1',    'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'event1',    'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'event1',    'name': 'd',                     'oil': 'system.json', 'mtrace': 'd.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'event1',    'name': 'e',                     'oil': 'system.json', 'mtrace': 'e.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'event1',    'name': 'f',                     'oil': 'system.json', 'mtrace': 'f.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'event1',    'name': 'g',                     'oil': 'system.json', 'mtrace': 'g.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'eventisr1', 'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'eventisr1', 'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'eventisr1', 'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json', 'synthesis_disabled': ['posix']},
+  {'core': 'singlecore', 'path': 'ecc1' / 'eventisr1', 'name': 'd',                     'oil': 'system.json', 'mtrace': 'd.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'eventisr1', 'name': 'e',                     'oil': 'system.json', 'mtrace': 'e.trace.json'},
+  {'core': 'singlecore', 'path': 'ecc1' / 'eventisr1', 'name': 'f',                     'oil': 'system.json', 'mtrace': 'f.trace.json'},
+  {'core': 'singlecore', 'path': 'sched' ,             'name': 'a',                     'oil': 'a.json', 'mtrace': 'a.trace.json'},
+  {'core': 'singlecore', 'path': 'examples' ,          'name': 'ara-pointer',           'oil': 'ara-pointer.json', 'timing': 'BB'},
+  {'core': 'singlecore', 'path': 'examples' ,          'name': 'ara-loop1',             'oil': 'ara-loop.json', 'timing': 'BB'},
+  {'core': 'singlecore', 'path': 'examples' ,          'name': 'ara-loop2',             'oil': 'ara-loop.json', 'timing': 'BB'},
+  {'core': 'singlecore', 'path': 'examples' ,          'name': 'ara-loop3',             'oil': 'ara-loop.json', 'timing': 'BB'},
+  {'core': 'multicore',  'path': 'examples' ,          'name': 'ara-loop1',             'oil': 'ara-loop.json', 'timing': 'BB'},
+  {'core': 'multicore',  'path': 'examples' ,          'name': 'ara-loop2',             'oil': 'ara-loop.json', 'timing': 'BB'},
+  {'core': 'multicore',  'path': 'examples' ,          'name': 'ara-loop3',             'oil': 'ara-loop.json', 'timing': 'BB'},
+  {'core': 'multicore',  'path': '',                   'name': 'minexample',            'oil': 'minexample.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'interrupts',        'name': 'a',                     'oil': 'a_system.json', 'mtrace': 'a_trace.json', 'timing': 'a_timings.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'interrupts',        'name': 'cross_alarms',          'oil': 'cross_alarms_system.json', 'mtrace': 'cross_alarms_trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '2cores',  'name': 'a',                     'oil': 'system.json', 'mtrace': 'a.trace.json', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '2cores',  'name': 'a_start1',              'oil': 'EXTRACT', 'mtrace': 'a_start1.trace.json', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '2cores',  'name': 'b',                     'oil': 'system.json', 'mtrace': 'b.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '2cores',  'name': 'c',                     'oil': 'system.json', 'mtrace': 'c.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '2cores',  'name': 'd',                     'oil': 'system.json', 'mtrace': 'd.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'a',                     'oil': 'a.system.json', 'mtrace': 'a.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'b',                     'oil': 'b.system.json', 'mtrace': 'b.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'c',                     'oil': 'c.system.json', 'mtrace': 'c.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'd',                     'oil': 'd.system.json', 'mtrace': 'd.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'e',                     'oil': 'e.system.json', 'mtrace': 'e.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'f',                     'oil': 'system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'g',                     'oil': 'system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'h',                     'oil': 'system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'i',                     'oil': 'system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'j',                     'oil': 'system.json', 'mtrace': 'j.trace.json', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'k',                     'oil': 'system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'l',                     'oil': 'system.json', 'mtrace': 'l.trace.json', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'm',                     'oil': 'system_m.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '3cores',  'name': 'n',                     'oil': 'system_m.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'identity-a',         'oil': 'identity-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'timing': 'BB', 'ttrace': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'identity-a-chain',   'oil': 'identity-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'identity-a-start5',  'oil': 'EXTRACT',              'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'timing': 'BB', 'ttrace': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'identity-b',         'oil': 'identity-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'identity-c',         'oil': 'identity-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'identity-d',         'oil': 'identity-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'identity-e',         'oil': 'identity-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'triple-a',           'oil': 'triple-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'triple-a-start5',    'oil': 'EXTRACT',            'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'triple-b',           'oil': 'triple-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'triple-c',           'oil': 'triple-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'locks' / '6cores',  'name': 'triple-d',           'oil': 'triple-system.json', 'mtrace': 'EXTRACT', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'loops',              'name': 'a',                     'oil': 'system_a.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'loops',              'name': 'b',                     'oil': 'system_b.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'loops',              'name': 'c',                     'oil': 'system_b.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'timing',             'name': 'a',                     'oil': 'system_a.json', 'timing': 'a_timing.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'timing',             'name': 'b',                     'oil': 'system_b.json', 'timing': 'b_timing.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'timing',             'name': 'c',                     'oil': 'system_c.json', 'timing': 'c_timing.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'timing',             'name': 'artificial_delay',      'oil': 'artificial_delay.json', 'timing': 'BB', 'short_delay': 'artificial_delay.short.trace.json', 'long_delay': 'artificial_delay.long.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'running',               'oil': 'system_running.json', 'mtrace': 'running.trace.json', 'locks': 'EXTRACT', 'timing': 'BB', 'ttrace': 'running.timing.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv'], 'use_in_parrot': true},
+  {'core': 'multicore',  'path': 'paper',              'name': 'running_pmu',           'oil': 'system_running.json', 'mtrace': 'running.pmu.trace.json', 'locks': 'EXTRACT', 'timing': 'BB', 'ttrace': 'running.pmu.timing.trace.json', 'synthesis_disabled': ['posix', 'riscv'], 'opt': true, 'variants': ['T11', 'T02', 'T01']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'running_long11',        'oil': 'system_running.json', 'locks': 'EXTRACT', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'deadlock',              'oil': 'system_running.json', 'locks': 'EXTRACT', 'timing': 'BB', 'mtrace': 'deadlock.trace.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'minimal',               'oil': 'system_minimal.json', 'locks': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'event',                 'oil': 'system_event.json', 'locks': 'EXTRACT', 'mtrace': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'timing',                'oil': 'system_timing.json', 'locks': 'EXTRACT', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'interrupt_as_tasks',    'oil': 'system_interrupt_as_tasks.json', 'locks': 'EXTRACT', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'interrupt_as_tasks2',   'oil': 'system_interrupt_as_tasks.json', 'locks': 'EXTRACT', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'interrupt_as_tasks3',   'oil': 'system_interrupt_as_tasks.json', 'locks': 'EXTRACT', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'timing-semiordered',    'oil': 'system_timing.json', 'locks': 'EXTRACT', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'paper',              'name': 'timing-ordered',        'oil': 'system_timing.json', 'locks': 'EXTRACT', 'timing': 'BB', 'mtrace': 'EXTRACT', 'ttrace': 'EXTRACT', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'complex',            'name': 'copter-without-alarms', 'oil': 'copter-without-alarms_system.json', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'complex',            'name': 'copter-with-alarms',    'oil': 'copter-with-alarms_system.json', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'complex',            'name': 'copter-single-alarm',   'oil': 'copter-single-alarm_system.json', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'complex',            'name': 'copter-autostart',      'oil': 'copter-autostart_system.json', 'locks': 'EXTRACT', 'timing': 'BB', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'complex',            'name': 'copter-autostart_pmu',  'oil': 'copter-autostart_system.json', 'locks': 'EXTRACT', 'timing': 'BB', 'synthesis_disabled': ['posix', 'riscv'], 'opt': true},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi',     'name': 'a',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi',     'name': 'b',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi',     'name': 'c',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi',     'name': 'd',                     'oil': 'system.json', 'synthesis_disabled': ['posix', 'pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi',     'name': 'e',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi',     'name': 'f',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi',     'name': 'g',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi2',    'name': 'a',                     'oil': 'system_a.json', 'synthesis_disabled': ['posix']},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi2',    'name': 'b',                     'oil': 'system_b.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi2',    'name': 'c',                     'oil': 'system_c.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi2',    'name': 'd',                     'oil': 'system_d.json', 'synthesis_disabled': ['posix']},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi2',    'name': 'e',                     'oil': 'system_e.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi2',    'name': 'f',                     'oil': 'system_f.json', 'synthesis_disabled': ['pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'ipi2',    'name': 'g',                     'oil': 'system_f.json', 'synthesis_disabled': ['pi4', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'spinlock','name': 'a',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'spinlock','name': 'b',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'spinlock','name': 'c',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'spinlock','name': 'd',                     'oil': 'system_d.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'spinlock','name': 'e',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'spinlock','name': 'f',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'cores',   'name': '4',                     'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'cores',   'name': '12',                    'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'cores',   'name': '16',                    'oil': 'system.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'pmu',    'name': 'minimal',                'oil': 'system_spinlock.json', 'synthesis_disabled': ['posix', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'pmu',    'name': 'ipi_send',               'oil': 'system_ipi_send.json', 'synthesis_disabled': ['posix', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'pmu',    'name': 'ipi_recv',               'oil': 'system_ipi_recv.json', 'synthesis_disabled': ['posix', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'pmu',    'name': 'ipi_recv_cache',         'oil': 'system_ipi_recv.json', 'synthesis_disabled': ['posix', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'pmu',    'name': 'ipi_max',                'oil': 'system_ipi_max.json', 'synthesis_disabled': ['posix', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'pmu',    'name': 'get_spinlock',           'oil': 'system_spinlock.json', 'synthesis_disabled': ['posix', 'riscv']},
+  {'core': 'multicore',  'path': 'andreas'/ 'alarmmc','name': 'a',                     'oil': 'system_a.json'},
+  {'core': 'multicore',  'path': 'andreas'/ 'alarmmc','name': 'b',                     'oil': 'system_b.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'spinlock',                  'oil': 'spinlock_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'counter',                   'oil': 'counter_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'min_counter_a',                   'oil': 'min_counter_a_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'min_counter_b',                   'oil': 'min_counter_b_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'min_counter_c',                   'oil': 'min_counter_c_system.json', 'timing': 'BB'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'waiting',                   'oil': 'waiting_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'activateTask_res',          'oil': 'activateTask_res_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'newSched',                 'oil': 'newSched_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'virt_counter_local',                   'timing': 'BB','oil': 'virt_counter_local_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'virt_counter_multicore',                   'timing': 'BB','oil': 'virt_counter_multicore_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'hw_counter_multicore',                   'timing': 'BB','oil': 'hw_counter_multicore_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'basic_tests','name': 'w_time_newSched',                 'timing': 'BB', 'oil': 'w_time_newSched_system.json'},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'testsuit','name': 'tasks',           'timing': 'BB', 'oil': 'tasks.json',    'variants': ['1', '2', '3', '4', '5', '6', '7', '8', '9']},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'testsuit','name': 'labels',          'timing': 'BB', 'oil': 'tasks.json',    'variants': ['1', '2', '3', '4', '5', '6', '7', '8', '9']},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'testsuit','name': 'mixed',           'timing': 'BB', 'oil': 'angle.json',    'variants': ['1', '2', '3', '4', '5', '6', '7', '8', '9']},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'testsuit','name': 'angle',           'timing': 'BB', 'oil': 'angle.json',    'variants': ['1', '2', '3', '4', '5', '6', '7', '8', '9']},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'testsuit','name': 'angle-ideal',     'timing': 'BB', 'oil': 'angle-ideal.json',    'variants': ['1', '2', '3', '4', '5', '6', '7', '8', '9']},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'testsuit','name': 'angle-worst',     'timing': 'BB', 'oil': 'angle-worst.json',    'variants': ['1', '2', '3', '4', '5', '6', '7', '8', '9']},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'testsuit','name': 'angle-notimes',                   'oil': 'angle-notimes.json',    'variants': ['1', '2', '3', '4', '5', '6', '7', '8', '9']},
+  {'core': 'singlecore',  'path': 'automotive_benchmark'/ 'bugfix','name': 'a',                   'oil': 'a.json',    'timing': 'BB'},
+]
+autosar_targets = []
+
+# This set of testcases depend on posix?
+if posix_enabled
+  subdir('multicore' / 'trampoline')
+endif
+
+if get_option('build_hypersse_xen')
+  # Add Autosar xen guests here
+  autosar_apps += [
+    # --------------------------- minimal ----------------------------------
+    {'core': '../Xen',  'path': 'min-autosar'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'min-autosar'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'min-az'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'min-ba'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'many'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'many'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'many'/ 'Autosar-C','name': 'c', 'oil': 'c.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'many'/ 'Autosar-D','name': 'd', 'oil': 'd.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'many'/ 'Autosar-E','name': 'e', 'oil': 'e.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'many'/ 'Autosar-F','name': 'f', 'oil': 'f.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'alarm'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'alarm-2'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'alarm-2'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+
+    # --------------------------- hypercalls  ----------------------------------
+    {'core': '../Xen',  'path': 'hc-autosar'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-autosar'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-autosar2'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-autosar2'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-a-z1'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-b-a1'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-a-z2'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-b-a2'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-autosar-notiming'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-autosar-notiming'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+
+    # --------------------------- shared memory  ----------------------------------
+    {'core': '../Xen',  'path': 'shamem-autosar-ro'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar-ro'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar-raw'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar-raw'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar-war'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar-war'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar-unknown'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar-unknown'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar'/ 'Autosar-C','name': 'c', 'oil': 'c.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'shamem-autosar'/ 'Autosar-D','name': 'd', 'oil': 'd.json', 'timing': 'BB'},
+
+
+    # --------------------------- COMPLEX ----------------------------------
+    {'core': '../Xen',  'path': 'pingpong'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'pingpong'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'sendrecv-a'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'sendrecv-a'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'sendrecv-b'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'sendrecv-b'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'channels'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'channels'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'channels'/ 'Autosar-C','name': 'c', 'oil': 'c.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'ipi'/ 'Autosar-A','name': 'a', 'oil': 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'ipi'/ 'Autosar-B','name': 'b', 'oil': 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'ipi'/ 'Autosar-C','name': 'c', 'oil': 'c.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'ipi'/ 'Autosar-D','name': 'd', 'oil': 'd.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'automotive-1' / 'Autosar-A', 'name': 'tasks', 'oil'  : 'tasks.json'},
+    {'core': '../Xen',  'path': 'automotive-1' / 'Autosar-B', 'name': 'tasks', 'oil'  : 'tasks.json'},
+    {'core': '../Xen',  'path': 'automotive-2' / 'Autosar-A', 'name': 'tasks', 'oil'  : 'tasks.json'},
+
+    # --------------------------- Thesis ----------------------------------
+    # for images in MA, not in test suite, manually renamed/modified!
+    # ninja subprojects/ara/appl/AUTOSAR/autosar____Xen_thesis_Autosar_A_cfg_noopt_mod.pi4.ll
+    # dot -Tsvg MultiSSE.alarm-2.mstg.dot  > MultiSSE.alarm-2.mstg.svg
+    {'core': '../Xen',  'path': 'thesis'/ 'Autosar-A','name': 'cfg', 'oil': 'cfg.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'thesis'/ 'Autosar-B','name': 'multicore', 'oil': 'multicore.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'thesis'/ 'Autosar-C','name': 'multi_core', 'oil': 'multi_core.json', 'timing': 'BB'},
+    # ninja subprojects/ara/appl/AUTOSAR/autosar____Xen_thesis_Autosar_D_ipi_noopt_mod.pi4.ll
+    {'core': '../Xen',  'path': 'thesis'/ 'Autosar-D','name': 'ipi', 'oil': 'ipi.json', 'timing': 'BB'},
+
+    # min-2, hc-autosar, hc-autosar-noiit, alarm-2, ipi are used from test-suite
+
+
+    # --------------------------- ECRTS26-Paper ----------------------------------
+    {'core': '../Xen',  'path': 'braking' / 'Autosar-A', 'name': 'a1_loop_no_predict', 'oil'  : 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'braking' / 'Autosar-A', 'name': 'a2_loop', 'oil'  : 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'braking' / 'Autosar-A', 'name': 'a3_unrolled', 'oil'  : 'a.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'braking' / 'Autosar-B', 'name': 'b1_ack_hmi', 'oil'  : 'b.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'braking' / 'BareMetal-C', 'name': 'c_autosar', 'oil'  : 'c.json', 'timing': 'BB'},
+    {'core': '../Xen',  'path': 'hc-autosar-polled' / 'Autosar-A', 'name': 'a', 'oil'  : 'a.json'},
+    {'core': '../Xen',  'path': 'hc-autosar-polled' / 'Autosar-B', 'name': 'b', 'oil'  : 'b.json'},
+    {'core': '../Xen',  'path': 'hc-autosar-polled-2' / 'Autosar-A', 'name': 'a', 'oil'  : 'a.json'},
+    {'core': '../Xen',  'path': 'hc-autosar-polled-2' / 'Autosar-B', 'name': 'b', 'oil'  : 'b.json'},
+  ]
+endif
+
+
+# -----------------------------------------------------------------------------------------------
+# Add variants to create autosar_apps_with_variants 
+autosar_apps_with_variants = []
+foreach app : autosar_apps
+  # src file
+  sys = app['core'] / app['path'] / app['name']
+  full_name = 'autosar_' + sys.underscorify()
+  if app.has_key('variants')
+    foreach variant : app['variants']
+      full_name = 'autosar_' + sys.underscorify() + '_' + variant
+      autosar_apps_with_variants += [app + {'src': files(sys + '.cc')[0], 'full_name': full_name, 'variant': variant}]
+    endforeach
+  else
+    autosar_apps_with_variants += [app + {'src': files(sys + '.cc')[0], 'full_name': full_name}]
+  endif
+endforeach
+
+
+# -----------------------------------------------------------------------------------------------
+# Add LLVM ll files into autosar_targets 
+
+# LLVM Compilation into LLVM
+foreach app : autosar_apps_with_variants
+  sys = app['core'] / app['path'] / app['name']
+  full_name = app['full_name']
+  #oil file
+  if app['oil'] == 'EXTRACT'
+    oil = custom_target(full_name + '.system.json',
+                        input: app['src'],
+                        output : full_name + '.system.json',
+                        capture: true,
+                        command : [sed, '-n', '/if SYSTEM_JSON/,/SYSTEM_JSON/{/SYSTEM_JSON/d;p}', '@INPUT@'])
+  else
+    oil = files(app['core'] / app['path'] / app['oil'])[0]
+  endif
+  app += {'oil': oil}
+
+  variant_flags = []
+  if app.has_key('variant')
+    variant_flags += ['-DVARIANT_' + app['variant']]
+  endif
+
+  # compile the application
+  if posix_enabled
+    app_ll_posix = custom_target(full_name + '_ll_posix',
+                          input : sys + '.cc',
+                          output : full_name + '.posix.ll',
+                          depfile : full_name + '.posix.ll.dep',
+                          command : clang_cpp +
+                                    posix_autosar_includes +
+                                    autosar_includes +
+                                    clang_flags +
+                                    variant_flags +
+                                    autosar_posix_clang_flags +
+                                    '-O0' + # dont optimize before IR
+                                    ir_flags)
+  else
+    app_ll_posix = disabler()
+  endif
+  app += {'ll': app_ll_posix} # store in ll to not break dependencies
+
+  if arm_enabled
+    app_ll_pi4 = custom_target(full_name + '_ll_pi4',
+                          input : sys + '.cc',
+                          output : full_name + '.pi4.ll',
+                          depfile : full_name + '.pi4.ll.dep',
+                          command : clang_cpp +
+                                    arm_autosar_includes +
+                                    autosar_includes +
+                                    clang_flags +
+                                    variant_flags +
+                                    autosar_pi4_clang_flags +
+                                    '-O0' + # dont optimize before IR
+                                    ir_flags)
+  else
+    app_ll_pi4 = disabler()
+  endif
+  app += {'ll_pi4': app_ll_pi4}
+
+  if riscv_enabled
+    app_ll_riscv = custom_target(full_name + '_ll_riscv',
+                          input : sys + '.cc',
+                          output : full_name + '.riscv.ll',
+                          depfile : full_name + '.riscv.ll.dep',
+                          command : clang_cpp +
+                                    riscv_autosar_includes +
+                                    autosar_includes +
+                                    clang_flags +
+                                    variant_flags +
+                                    autosar_riscv_clang_flags +
+                                    '-O0' + # dont optimize before IR
+                                    ir_flags)
+  else
+    app_ll_riscv = disabler()
+  endif
+    app += {'ll_riscv': app_ll_riscv}
+
+
+  # timings for multisse with lock elision
+  if not app.has_key('timing')
+    sys_timings = disabler()
+  elif app['timing'] == 'BB'
+    sys_timings = 'BB'
+  else
+    sys_timings = files(app['core'] / app['path'] / app['timing'])
+  endif
+  app += {'sys_timings': sys_timings}
+
+  if get_option('build_step_tests')
+    # trace file for sse testing
+    if not app.has_key('mtrace')
+      sys_test =  disabler()
+    elif app['mtrace'] == 'EXTRACT'
+      sys_test = custom_target(full_name + '.trace.json',
+                              input: sys + '.cc',
+                              output : full_name + '.trace.json',
+                              capture: true,
+                              command : [sed, '-n', '/if TRACE_JSON/,/TRACE_JSON/{/TRACE_JSON/d;p}', '@INPUT@'])
+    else
+      sys_test = files(app['core'] / app['path'] / app['mtrace'])
+    endif
+    app += {'sys_test': sys_test}
+
+    if not app.has_key('ttrace')
+      time_test =  disabler()
+    elif app['ttrace'] == 'EXTRACT'
+      time_test = custom_target(full_name + '.ttrace.json',
+                                input: sys + '.cc',
+                                output : full_name + '.ttrace.json',
+                                capture: true,
+                                command : [sed, '-n', '/if TIMING_JSON/,/TIMING_JSON/{/TIMING_JSON/d;p}', '@INPUT@'])
+    else
+      time_test = files(app['core'] / app['path'] / app['ttrace'])
+    endif
+    app += {'time_test': time_test}
+
+    # lock elision test data
+    if app.has_key('locks')
+      if app['locks'] == 'EXTRACT'
+        locks = custom_target(full_name + '.locks.json',
+                              input: sys + '.cc',
+                              output : full_name + '.locks.json',
+                              capture: true,
+                              command : [sed, '-n', '/if LOCKS_JSON/,/LOCKS_JSON/{/LOCKS_JSON/d;p}', '@INPUT@'])
+      elif app.has_key('locks')
+        locks = files(app['core'] / app['path'] / app['locks'])
+      endif
+      app += {'locks': locks}
+    endif
+
+    foreach extra_key : ['short_delay', 'long_delay']
+      if app.has_key(extra_key)
+        # file for uncommon actions
+        special = files(app['core'] / app['path'] / app[extra_key])
+        app += {extra_key: special}
+      endif
+    endforeach
+  endif
+
+  set_variable(full_name, app)
+  autosar_targets += [app]
+endforeach
+
+
+# -----------------------------------------------------------------------------------------------
+# ARA Analysis + Synthesis
+autosar_generated_targets_posix = []
+autosar_generated_targets_pi4 = []
+autosar_generated_targets_riscv = []
+foreach app: autosar_targets
+  full_name = app['full_name']
+
+  if get_option('build_step_tests')
+    no_timing_settings = custom_target(
+      output: 'no_timing_settings.json',
+      capture: true,
+      command: ['echo', '{"steps": ["LockElision", "IPIAvoidance"], "MultiSSE": {"with_times": false}}'],
+    )
+    with_timing_settings = custom_target(
+      output: 'with_timing_settings.json',
+      capture: true,
+      command: ['echo', '{"steps": ["ApplyTimings", "LockElision", "IPIAvoidance"], "MultiSSE": {"with_times": true}}'],
+    )
+    generate_timing_settings = custom_target(
+      output: full_name  + '.generate_timing_settings.json',
+      capture: true,
+      command: ['echo', '{"steps": ["ApplyTimings", "LoadOIL", "DumpCFG"], "ApplyTimings": {"create_timings": "' +  app['full_name'] +'.empty_timing.json"}}'],
+    )
+
+    run_target('run_lock_elision_no_timings_' + full_name,
+              command: [py3_inst, ara_py, app['ll'], '--os', 'AUTOSAR', '--oilfile', app['oil'], '-s', 'LockElision', '-s', 'IPIAvoidance'])
+    run_target('run_lock_elision_generate_timings_' + full_name,
+              command: [py3_inst, ara_py, app['ll'], '--os', 'AUTOSAR', '--oilfile', app['oil'], '--step-settings', generate_timing_settings])
+    run_target('run_lock_elision_with_timings_' + full_name,
+              command: [py3_inst, ara_py, app['ll'], '--os', 'AUTOSAR', '--oilfile', app['oil'], '--step-settings', with_timing_settings, '--timings', app['sys_timings'], '--step-data'])
+
+    step_data = custom_target(full_name + '.multisse.no_timing.stepdata.json',
+                              input: [ara_py, app['ll'], app['oil']],
+                              output: full_name + '.multisse.no_timing.stepdata.json',
+                              depfile: full_name + '.dep',
+                              command: [py3_inst, ara_py, app['ll'], '--os', 'AUTOSAR',
+                                        '--dependency_file', '@DEPFILE@',
+                                        '--oilfile', app['oil'],
+                                        '-s', 'LockElision', '-s', 'IPIAvoidance',
+                                        '--step-data', '@OUTPUT@'],
+                            )
+
+    step_data = custom_target(full_name + '.multisse.with_timing.stepdata.json',
+                              input: [ara_py, app['ll'], app['oil']],
+                              output: full_name + '.multisse.with_timing.stepdata.json',
+                              depfile: full_name + '.dep',
+                              command: [py3_inst, ara_py, app['ll'], '--os', 'AUTOSAR',
+                                        '--dependency_file', '@DEPFILE@',
+                                        '--oilfile', app['oil'],
+                                        '--step-settings', with_timing_settings,
+                                        '--timings', app['sys_timings'],
+                                        '--step-data', '@OUTPUT@'],
+                            )
+  endif
+
+  if posix_enabled and not (app.has_key('synthesis_disabled') and 'posix' in app['synthesis_disabled'])
+    if get_option('execute_ara')
+      out = custom_target(
+        full_name + '_mod_posix',
+        input : app['ll'],
+        output : [
+          full_name + '_mod.posix.ll',
+          full_name+'_autosar.posix.cc'
+        ],
+        depfile : full_name + '_mod.posix.ll.dep',
+        command : [
+          py3_inst, ara_py, app['ll'],
+          '--os', 'AUTOSAR',
+          '--oilfile', app['oil'],
+          '--ir_output', '@OUTPUT0@',
+          '--step-settings', files('../../settings/autosar_generator_posix.json'),
+          '--generator_output', '@OUTPUT1@',
+        ]
+      )
+    else
+      out = disabler()
+    endif
+    app_ll_mod = out[0]
+    autosar = out[1]
+    app += {'ll_posix_mod': app_ll_mod}
+    app += {'autosar_posix': autosar}
+
+    app_image_posix = custom_target(full_name + '_image_posix',
+                            input: [
+                              app_ll_mod,
+                              autosar,
+                              libautosar_test_posix,
+                              libautosar_os_posix,
+                              libautosar_arch_posix,
+                              libautosar_generic_posix
+                            ],
+                            output : full_name + '_posix',
+                            depfile : full_name + '.posix.dep',
+                            command : clang_cpp +
+                                      posix_autosar_includes +
+                                      autosar_includes +
+                                      ld_flags +
+                                      autosar_posix_clang_flags +
+                                      clang_flags
+                                      )
+
+    app += {'app_image_posix': app_image_posix}
+
+    run_cmd = [app_image_posix]
+    app += {'run_cmd_posix': run_cmd}
+    run_target('run_' + full_name + '_posix', command: run_cmd)
+
+    # generator testsuite, not all applications are eligable for synthesis
+    name=full_name
+    if 'Xen' not in name and 'examples_ara' not in name and 'pmu' not in name and 'automotive_benchmark' not in name and \
+      'multicore_andreas_spinlock' not in name and 'autosar_singlecore_bcc1_alarm1_e' not in name and 'autosar_multicore_andreas_alarmmc_b' not in name and \
+      'autosar_multicore_andreas_ipi2_d' not in name and 'autosar_singlecore_bcc1_alarm' not in name and 'autosar_singlecore_bcc1_complex1' not in name and \
+      'autosar_singlecore_bcc1_isr' not in name and 'autosar_multicore_andreas_ipi' not in name and 'autosar_multicore_andreas_alarmmc_a' not in name
+      # some tests might run locally but not in the CI
+      autosar_generated_targets_posix += app
+    endif
+  endif
+
+  if arm_enabled and not (app.has_key('synthesis_disabled') and 'pi4' in app['synthesis_disabled'])
+    ara_opt_settings = {
+      'opt': autosar_generator_arm_opt,
+      'noopt': autosar_generator_arm_noopt,
+      'cust': autosar_sse_arm_custom_settings
+    }
+    if app.has_key('timing')
+      ara_timing_settings = ['--timing', app['sys_timings']]
+    else
+      ara_timing_settings = []
+    endif
+
+    opt_targets = ['noopt', 'cust']
+    if app.has_key('opt') and app['opt']
+      opt_targets += ['opt']
+    endif
+    foreach opt : opt_targets
+      opt_app_name = full_name + '_' + opt
+      app += {'opt': opt}
+      if get_option('execute_ara')
+        ara_cmd = [ py3_inst, ara_py, app['ll_pi4'],
+              '--os', 'AUTOSAR',
+              '--oilfile', app['oil'],
+              '--ir_output', '@OUTPUT0@',
+              '--step-settings',
+              # TODO: this should be done in a seperate targets
+              # if in autosar_benchmark use different settings file
+              get_option('autosar_benchmark') ? autosar_sse_arm_automotive_benchmark : ara_opt_settings[opt],
+              '--generator_output', '@OUTPUT1@',
+              ara_timing_settings
+          ]  
+        if opt == 'cust'
+          name = app['full_name']
+          dynamic_step_settings=f'{"MultiSSE": {"with_times": true, "file_name": "@name@", "log_level": "debug", "per_round_dump": false, "dump": true}'
+          ara_cmd += ['--dynamic-step-settings', dynamic_step_settings]
+        endif
+        # if in autosar_benchmark add to cmd
+        # if is_variable('autosar_benchmark')
+        #   ara_cmd += ['--no_colors', 'True']
+        # endif
+        out = custom_target(
+          opt_app_name + '_mod_pi4',
+          input : app['ll_pi4'],
+          output : [
+            opt_app_name + '_mod.pi4.ll',
+            opt_app_name +'_autosar.pi4.cc',
+            opt_app_name +'_autosar.pi4.ld'
+          ],
+          depfile : opt_app_name + '_mod.pi4.ll.dep',
+          command : ara_cmd
+        )
+      else
+        out = disabler()
+      endif
+      app_ll_mod = out[0]
+      autosar = out[1]
+      linker_script = out[2]
+      app += {'ll_pi4_mod_' + opt: app_ll_mod}
+      app += {'autosar_pi4_' + opt: autosar}
+      app += {'linker_script_pi4_' + opt: linker_script}
+
+      app_image_pi4 = custom_target(opt_app_name + '_image_pi4',
+                              input: [
+                                app_ll_mod,
+                                autosar,
+                                libautosar_test_pi4,
+                                libautosar_os_pi4,
+                                libautosar_arch_pi4,
+                                libautosar_generic_pi4
+                              ],
+                              output : opt_app_name + '_pi4',
+                              depfile : opt_app_name + '.pi4.dep',
+                              command : clang_cpp +
+                                        ['-T', linker_script] +
+                                        arm_autosar_includes +
+                                        autosar_includes +
+                                        ld_flags +
+                                        autosar_pi4_ld_flags +
+                                        clang_flags +
+                                        autosar_pi4_clang_flags)
+
+      app += {'app_image_pi4_' + opt: app_image_pi4}
+      run_cmd = libplatforms_proj.get_variable('qemu_rpi4_32bit_cmd') + app_image_pi4
+      app += {'run_cmd_pi4_' + opt: run_cmd}
+      rt = 'run_' + opt_app_name + '_pi4'
+      run_target(rt, command: run_cmd)
+      # summary('Run @0@ on Qemu'.format(opt_app_name), 'meson compile ' + rt, bool_yn: true, section: 'MACAW, AUTOSAR synthesis')
+
+      pi4_bin = custom_target(opt_app_name + '_pi4_bin',
+                          input: [
+                            app_image_pi4,
+                          ],
+                          output : opt_app_name + '_pi4.bin',
+                          depfile : opt_app_name + '.pi4.bin.dep',
+                          command : [ llvm_objcopy,
+                                    '-O', 'binary',
+                                    '@INPUT@',
+                                    '@OUTPUT@'])
+      app += {'pi4_bin': pi4_bin}
+      rt = 'tftp_' + opt_app_name + '_pi4'
+      pi4_tftp_cmd = [
+                      py3_inst,
+                      tftp_deploy,
+                      pi4_bin.full_path(),
+                      '--ssh-host', libplatforms_proj.get_variable('tftp_host'),
+                      '--scp', scp.full_path(),
+                      '--ssh', ssh.full_path(),
+                      '--path', '/proj/tftp/research/rpi4/autosar',
+                      '--rpi',
+      ]
+      app += {'pi4_tftp_cmd': pi4_tftp_cmd}
+      pi4_bin_pxe = run_target(rt,
+                          depends : [pi4_bin],
+                          command : pi4_tftp_cmd)
+      # summary('Flash @0@ on RPI with TFTP'.format(opt_app_name), 'meson compile ' + rt, bool_yn: true, section: 'MACAW, AUTOSAR synthesis')
+
+      # generator testsuite, not all applications are eligable for synthesis
+      if opt == 'noopt' and 'Xen' not in opt_app_name and 'examples_ara' not in opt_app_name and 'pmu' not in opt_app_name and \
+        'multicore_andreas_spinlock' not in opt_app_name and 'autosar_singlecore_bcc1_alarm1_e' not in opt_app_name and 'autosar_multicore_andreas_alarmmc_b' not in opt_app_name and \
+        'autosar_multicore_andreas_ipi2_d' not in opt_app_name
+        autosar_generated_targets_pi4 += app
+      endif
+    endforeach
+  endif
+
+  
+  if riscv_enabled and not (app.has_key('synthesis_disabled') and 'riscv' in app['synthesis_disabled'])
+    ara_opt_settings = {
+        'opt': autosar_generator_riscv_opt,
+        'noopt': autosar_generator_riscv
+      }
+    opt_targets = ['noopt']
+    # Todo: fix (opt)-targets
+    # message(app['full_name'])
+    # message(app.has_key('opt'))
+    # message(app['opt'])
+    # if app.has_key('opt') and app['opt']
+    #   opt_targets += ['opt']
+    # endif
+
+  	foreach opt: opt_targets
+      if opt == 'opt'
+        opt_suffix = '_' + opt
+      elif opt == 'noopt'
+        opt_suffix = ''
+      else
+        opt_suffix = disabler()
+      endif
+      opt_app_name = full_name + opt_suffix
+      if get_option('execute_ara')
+        out = custom_target(
+          opt_app_name + '_mod_riscv',
+          input : app['ll_riscv'],
+          output : [
+            opt_app_name + '_mod.riscv.ll',
+            opt_app_name +'_autosar.riscv.cc',
+          ],
+          depfile : opt_app_name + '_mod.riscv.ll.dep',
+          command : [
+            py3_inst, ara_py, '@INPUT@',
+            '--os', 'AUTOSAR',
+            '--oilfile', app['oil'],
+            #'--dump',
+            #'--log-level', 'debug',
+            '--ir_output', '@OUTPUT0@',
+           # '--step-settings', files('../../settings/autosar_generator_riscv.json'),
+            '--step-settings', ara_opt_settings[opt],
+            '--generator_output', '@OUTPUT1@',
+            #'--timings', app['sys_timings']
+          ]
+        )
+      else
+        out = disabler()
+      endif
+      app_ll_mod = out[0]
+      autosar = out[1]
+      app += {'ll_riscv_mod' + opt_suffix: app_ll_mod}
+      app += {'autosar_riscv' + opt_suffix: autosar}
+
+      app_image_riscv = custom_target(opt_app_name + '_image_riscv',
+                              input: [
+                                app_ll_mod,
+                                autosar,
+                                libautosar_test_riscv,
+                                libautosar_os_riscv,
+                                libautosar_arch_riscv,
+                                libautosar_generic_riscv
+                              ],
+                              output : opt_app_name + '_riscv',
+                              depfile : opt_app_name + '.riscv.dep',
+                              command : clang_cpp +
+                                        ['-T', autosar_riscv_linkerscript] +
+                                        riscv_autosar_includes +
+                                        autosar_includes +
+                                        ld_flags +
+                                        autosar_riscv_ld_flags +
+                                        clang_flags +
+                                        autosar_riscv_clang_flags)
+
+      app += {'app_image_riscv': app_image_riscv}
+
+      run_cmd = ['qemu-system-riscv64', '-M', 'virt', '-smp', '16', '-no-reboot', '-nographic', '-serial','mon:stdio', '-device', 'loader,addr=0x80000000,file='+app_image_riscv.full_path()]
+
+      app += {'run_cmd_riscv': run_cmd}
+      rt = 'run_' + opt_app_name + '_riscv'
+      run_target(rt, command: run_cmd, depends: app_image_riscv)
+      # summary('Run @0@ on RISC-V Qemu'.format(opt_app_name), 'meson compile ' + rt, bool_yn: true, section: 'MACAW, AUTOSAR synthesis')
+
+      riscv_bin = custom_target(opt_app_name + '_riscv_bin',
+                          input: [
+                            app_image_riscv,
+                          ],
+                          output : opt_app_name + '_riscv.bin',
+                          depfile : opt_app_name + '.riscv.bin.dep',
+                          command : [ llvm_objcopy,
+                                    '-O', 'binary',
+                                    '@INPUT@',
+                                    '@OUTPUT@'])
+
+      app += {'app_image_riscv_bin' + opt_suffix : riscv_bin}
+
+      rt = 'tftp_' + opt_app_name + '_riscv'
+      tftp_cmd = [
+                            py3_inst,
+                            tftp_deploy,
+                            riscv_bin.full_path(),
+                            '--ssh-host', libplatforms_proj.get_variable('tftp_host'),
+                            '--scp', scp.full_path(),
+                            '--ssh', ssh.full_path(),
+                            '--path', '/proj/tftp/research/beaglev',
+                            '--beaglev',
+                          ]
+
+      app += {'tftp_cmd_riscv' : tftp_cmd}
+      riscv_bin_tftp = run_target(rt,
+                          depends : [riscv_bin],
+                          command : tftp_cmd)
+      app +={'riscv_bin_tftp' : riscv_bin_tftp }
+      # summary('Flash @0@ on BeagleV with TFTP'.format(opt_app_name), 'meson compile ' + rt, bool_yn: true, section: 'MACAW, AUTOSAR synthesis')
+
+      # generator testsuite, not all applications are eligable for synthesis
+      # name=opt_app_name
+      # if opt == 'noopt' and 'Xen' not in name and 'examples_ara' not in name and 'pmu' not in name and 'automotive_benchmark' not in name  and \
+      #   'multicore_andreas_spinlock' not in name and 'autosar_singlecore_bcc1_alarm1_e' not in name and 'autosar_multicore_andreas_alarmmc_b' not in name and \
+      #   'autosar_multicore_andreas_ipi2_d' not in name
+      #   autosar_generated_targets_riscv += app
+      # endif
+    endforeach
+  endif
+
+endforeach
+
+if get_option('build_step_tests')
+  subdir('multicore/dynamic')
+endif

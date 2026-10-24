@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: 2024 Björn Fiedler <fiedler@sra.uni-hannover.de>
+# SPDX-FileCopyrightText: 2024 Gerion Entrup <entrup@sra.uni-hannover.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+from ara.os.freertos import Task, Queue, Mutex, StreamBuffer, ISR
+
+
+class BaseImpl:
+
+    def __init__(self, instance):
+        self.instance = instance
+
+    def __repr__(self):
+        return '<' + '|'.join(
+            [str((k, v))
+             for k, v in self.__dict__.items() if k != 'instance']) + '>'
+
+
+class TaskImpl(BaseImpl):
+
+    def __init__(self, instance):
+        super().__init__(instance)
+        self.stack = None
+        self.stackptr = None
+        self.tcb = None
+        self.tcbptr = None
+
+
+class QueueImpl(BaseImpl):
+
+    def __init__(self, instance):
+        super().__init__(instance)
+        self.head = None
+        self.data = None
+
+
+class MutexImpl(QueueImpl):
+    pass
+
+
+class StreamBufferImpl(BaseImpl):
+
+    def __init__(self, instance):
+        super().__init__(instance)
+        self.head = None
+
+
+class ISRImpl(BaseImpl):
+    pass
+
+
+def add_impl(instance):
+    if isinstance(instance, Task):
+        instance.impl = TaskImpl(instance)
+    elif isinstance(instance, Queue):
+        instance.impl = QueueImpl(instance)
+    elif isinstance(instance, Mutex):
+        instance.impl = MutexImpl(instance)
+    elif isinstance(instance, StreamBuffer):
+        instance.impl = StreamBufferImpl(instance)
+    elif isinstance(instance, ISR):
+        instance.impl = ISRImpl(instance)
+    else:
+        raise ValueError("Unknown Type:", type(instance))

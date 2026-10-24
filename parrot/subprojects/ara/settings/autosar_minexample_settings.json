@@ -1,0 +1,64 @@
+{
+	"steps": [
+		"MultiSSE",
+		"MSTGStats",
+		"LockElision",
+		"IPIAvoidance",
+		{
+			"name": "Printer",
+			"dot": "cfg.dot",
+			"from_entry_point": false,
+			"graph_name": "CFG",
+			"subgraph": "abbs"
+		},
+		{
+			"name": "Printer",
+			"dot": "bbs.dot",
+			"from_entry_point": false,
+			"graph_name": "CFG (BBs)",
+			"subgraph": "bbs"
+		}
+	],
+
+	"ICFG": {
+		"log_level": "debug"
+	},
+
+	"CreateABBs": {
+		"log_level": "debug"
+	},
+
+	"SysFuncts": {
+		"dump": true
+	},
+
+	"LoadOIL": {
+		"log_level": "debug",
+		"dump": true
+	},
+
+	"MultiSSE": {
+		"dump": true,
+		"log_level": "info"
+	},
+
+	"MSTGStats": {
+		"dump": true,
+		"log_level": "info"
+	},
+
+	"LockElision": {
+		"dump": true,
+		"log_level": "info"
+	},
+
+	"IPIAvoidance": {
+		"dump": true,
+		"log_level": "info"
+	},
+
+	"logger": {
+		"StepManager": "info",
+		"AUTOSAR": "info"
+	}
+}

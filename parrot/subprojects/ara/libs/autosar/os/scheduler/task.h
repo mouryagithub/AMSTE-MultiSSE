@@ -1,0 +1,76 @@
+// SPDX-FileCopyrightText: 2013-2014 Florian Lukas <florian.lukas@gmail.com>
+// SPDX-FileCopyrightText: 2013-2014 Martin Hoffmann <hoffmann@cs.fau.de>
+// SPDX-FileCopyrightText: 2013-2019 Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
+// SPDX-FileCopyrightText: 2023 Andreas Kässens
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#ifndef __TASK_H__
+#define __TASK_H__
+/**
+ *  @ingroup os
+ *  @defgroup scheduler The Scheduler
+ *  @brief This module provides scheduling functions
+ */
+
+/**
+ * @file
+ * @ingroup scheduler
+ * @brief The task handler
+ */
+#include "os/util/encoded.h"
+#include "os/util/inline.h"
+
+namespace arch {
+	struct TCB;
+};
+
+namespace os {
+	namespace scheduler {
+
+		/**
+		 * The basic task class
+		 * */
+		class Task {
+		  public:
+			typedef _Atomic(uint8_t) id_t;
+			typedef _Atomic(uint8_t) prio_t;
+
+			// task ID
+			const id_t id;
+			const uint8_t cpuid;
+
+			template <typename T>
+			constexpr T enc_id() const {
+				return T(id);
+			}
+			template <B_t B>
+			constexpr Encoded_Static<A0, B> enc_id() const {
+				return Encoded_Static<A0, B>(id);
+			}
+
+			// static priority
+			const prio_t prio;
+			template <typename T>
+			constexpr T enc_prio() const {
+				return T(prio);
+			}
+			template <B_t B>
+			constexpr Encoded_Static<A0, B> enc_prio() const {
+				return Encoded_Static<A0, B>(prio);
+			}
+
+			/* Is the task preemptable */
+			const bool preemptable;
+
+			/* Constant reference to the TCB */
+			const arch::TCB& tcb;
+
+			constexpr Task(id_t _id, uint8_t _cpuid, prio_t _prio, bool preemptable, const arch::TCB& tcb)
+			    : id(_id), cpuid(_cpuid), prio(_prio), preemptable(preemptable), tcb(tcb) {}
+		};
+
+	}; // namespace scheduler
+};     // namespace os
+
+#endif // __TASK_H__

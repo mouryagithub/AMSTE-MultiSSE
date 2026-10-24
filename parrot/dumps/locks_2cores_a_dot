@@ -1,0 +1,25 @@
+digraph G {
+label="System relevant functions";
+0 [label="__ara_fake_entry", shape=box, color=black];
+1 [label=main, shape=box, color=black];
+2 [label="AUTOSAR_GetCoreID", shape=box, color=black];
+3 [label="test_prepare", shape=box, color=black];
+4 [label="AUTOSAR_StartOS", shape=box, color=black];
+5 [label="AUTOSAR_TASK_FUNC_T11", shape=box, color=green];
+6 [label="AUTOSAR_GetSpinlock", shape=box, color=green];
+7 [label="AUTOSAR_ReleaseSpinlock", shape=box, color=green];
+8 [label="AUTOSAR_ActivateTask", shape=box, color=green];
+9 [label="AUTOSAR_TerminateTask", shape=box, color=green];
+10 [label="AUTOSAR_TASK_FUNC_T01", shape=box, color=green];
+0 -> 1 [label=BB20];
+1 -> 2 [label=BB0];
+1 -> 3 [label=BB2];
+1 -> 4 [label=BB4];
+5 -> 6 [label=ABB5];
+5 -> 7 [label=ABB6];
+5 -> 8 [label=ABB7];
+5 -> 9 [label=ABB8];
+10 -> 6 [label=BB14];
+10 -> 7 [label=BB16];
+10 -> 9 [label=BB18];
+}

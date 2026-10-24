@@ -1,0 +1,37 @@
+{
+  "vertices": [
+    [0, ["AUTOSAR_ResumeAllInterrupts", "H5", "CallPath()"]],
+    [1, ["AUTOSAR_ResumeAllInterrupts", "H5", "Callpath([ABB10, AUTOSAR_TASK_FUNC_H5 -> bar])"]],
+    [2, ["AUTOSAR_ResumeAllInterrupts", "H5", "Callpath([ABB8, AUTOSAR_TASK_FUNC_H5 -> bar])"]],
+    [3, ["AUTOSAR_ResumeAllInterrupts", "H5", "Callpath([ABB9, AUTOSAR_TASK_FUNC_H5 -> bar])"]],
+    [4, ["AUTOSAR_SuspendAllInterrupts", "H5", "CallPath()"]],
+    [5, ["AUTOSAR_SuspendAllInterrupts", "H5", "Callpath([ABB10, AUTOSAR_TASK_FUNC_H5 -> bar])"]],
+    [6, ["AUTOSAR_SuspendAllInterrupts", "H5", "Callpath([ABB8, AUTOSAR_TASK_FUNC_H5 -> bar])"]],
+    [7, ["AUTOSAR_SuspendAllInterrupts", "H5", "Callpath([ABB9, AUTOSAR_TASK_FUNC_H5 -> bar])"]],
+    [8, ["AUTOSAR_TerminateTask", "H3", "CallPath()"]],
+    [9, ["AUTOSAR_TerminateTask", "H3", "CallPath()"]],
+    [10, ["AUTOSAR_TerminateTask", "H3", "CallPath()"]],
+    [11, ["AUTOSAR_TerminateTask", "H5", "CallPath()"]],
+    [12, ["Idle"]],
+    [13, ["Start"]]
+  ],
+  "edges": [
+    [0, 9],
+    [0, 11],
+    [1, 0],
+    [2, 7],
+    [3, 5],
+    [4, 6],
+    [5, 1],
+    [6, 2],
+    [7, 3],
+    [8, 13],
+    [9, 9],
+    [9, 11],
+    [10, 12],
+    [11, 12],
+    [12, 10],
+    [13, 4],
+    [13, 8]
+  ]
+}

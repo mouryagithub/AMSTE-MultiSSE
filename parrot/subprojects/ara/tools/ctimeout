@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# SPDX-FileCopyrightText: 2023 Björn Fiedler <fiedler@sra.uni-hannover.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+if test $# -lt 1
+then
+    echo "Usage: $0 timeout command arg ..."
+    exit 126
+fi
+time=$((60*60*2))
+ulimit -t $time || { echo "Error: cannot set timeout $1"; exit 126; }
+eval "$@"

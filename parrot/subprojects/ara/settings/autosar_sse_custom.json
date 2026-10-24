@@ -1,0 +1,25 @@
+{
+	"steps": [
+		"ApplyTimings",
+		"MultiSSE"
+	],
+	"LoadOil" : {
+		"log_level": "warn"
+	},
+	"LLVMMap" : {
+		"log_level": "error"
+	},
+	"RemoveSysfuncBody": {
+		"disable": true
+	},
+	"SystemRelevantFunctions": {
+		"xen_syscall": true
+	},
+	"SysFuncts": {
+		"xen_syscall": true
+	},
+	"SVFAnalyses": {
+		"log_level": "warning",
+		"hide_svf_output": true
+	}
+}

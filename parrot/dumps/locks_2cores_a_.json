@@ -1,0 +1,10 @@
+{
+    "places": [
+        {
+            "state": 16,
+            "abb": 54,
+            "ipi_needed": true
+        }
+    ],
+    "num_not_used_ipis": 0
+}

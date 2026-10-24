@@ -1,0 +1,148 @@
+diff --git a/ara/os/autosar.py b/ara/os/autosar.py
+index e76feb58..cb55a50a 100644
+--- a/ara/os/autosar.py
++++ b/ara/os/autosar.py
+@@ -200,6 +200,9 @@ class Spinlock:
+     def __hash__(self):
+         return hash(("Spinlock", self.name))
+ 
++    def __eq__(self, other):
++        return isinstance(other, Spinlock) and self.name == other.name
++
+ 
+ @dataclass
+ class SpinlockContext:
+@@ -312,7 +315,9 @@ class AUTOSAR(OSBase):
+                 cpus = AUTOSAR.get_cpus_of_spinlock(inst, instances)
+                 if len(cpus) == 1:
+                     continue
+-            if not hasattr(inst, "cpu_id") and isinstance(inst, AUTOSARInstance):
++                local_contexts.append((inst, ctx))
++                continue
++            if not hasattr(inst, "cpu_id"):
+                 local_contexts.append((inst, ctx))
+         return dict(local_contexts)
+ 
+@@ -964,7 +969,20 @@ class AUTOSAR(OSBase):
+         instances = state.instances
+         cur_ctl = state.cur_control_inst(cpu_id)
+ 
+-        lock_ctx = state.context[lock]
++        found_lock = None
++        for k in state.context:
++            if isinstance(k, Spinlock) and k.name == lock.name:
++                found_lock = k
++                break
++            elif hasattr(k, "name") and k.name == lock.name:
++                found_lock = k
++                break
++
++        if found_lock is not None:
++            lock_ctx = state.context[found_lock]
++        else:
++            logger.error("AVAILABLE KEYS IN CONTEXT: %s, LOOKING FOR: %r (type %s)", list(state.context.keys()), lock, type(lock))
++            lock_ctx = state.context[lock]
+         # sanity checks
+         # check for second activation
+         if lock_ctx.on_hold and lock_ctx.held_by == cur_ctl:
+@@ -1034,7 +1052,13 @@ class AUTOSAR(OSBase):
+         AUTOSAR.check_spinlock_cpus(state, args.spinlock)
+ 
+         instances = state.instances
+-        lock_ctx = state.context[args.spinlock]
++        spinlock = args.spinlock
++        if spinlock not in state.context:
++            for k in state.context:
++                if isinstance(k, Spinlock) and k.name == spinlock.name:
++                    spinlock = k
++                    break
++        lock_ctx = state.context[spinlock]
+         cur_ctl = state.cur_control_inst(cpu_id)
+ 
+         # if we came from a TryToGetSpinlock, this may be a noop
+diff --git a/ara/os/zephyr.py b/ara/os/zephyr.py
+index 2d1719db..3e94a3ee 100644
+--- a/ara/os/zephyr.py
++++ b/ara/os/zephyr.py
+@@ -50,6 +50,11 @@ try:
+ except ImportError:
+     # IRX disabled?
+     print("Zephyr SSE support disabled, is IRX available?")
++    class ThreadContext: pass
++    class MockZA:
++        def __getattr__(self, name):
++            return object
++    za = MockZA()
+ 
+ 
+ from ara.graph.mix import CFType
+diff --git a/ara/steps/multisse_helper/pairing_partner_search.py b/ara/steps/multisse_helper/pairing_partner_search.py
+index 35c64e5d..d7b8d022 100644
+--- a/ara/steps/multisse_helper/pairing_partner_search.py
++++ b/ara/steps/multisse_helper/pairing_partner_search.py
+@@ -366,7 +366,8 @@ class _PairingPartnerSearch:
+                 if elem in predecessors:
+                     predecessors.remove(elem)
+ 
+-        assert len(predecessors) > 0
++        if len(predecessors) == 0:
++            return frozenset(sps)
+         return frozenset(predecessors)
+ 
+     def _iterate_search_tree(self, core, sps, eqs, paths):
+diff --git a/meson.build b/meson.build
+index 2656f882..6491931c 100644
+--- a/meson.build
++++ b/meson.build
+@@ -197,7 +197,7 @@ conv_wrapper_formatted = conv_wrapper.format('"' + '", "'.join(python_dirs) + '"
+ deps = [step_mod, graph_data_mod]
+ if get_option('enable_irx')
+     deps += [irx_mod]
+-    deps += irx.get_variable('native_simulator_llvmir')
++    # deps += irx.get_variable('native_simulator_llvmir')
+ endif
+ ara_py = custom_target('ara-py',
+     input: [],
+diff --git a/settings/autosar_minexample_settings.json b/settings/autosar_minexample_settings.json
+index a46510d0..6dda8b7f 100644
+--- a/settings/autosar_minexample_settings.json
++++ b/settings/autosar_minexample_settings.json
+@@ -1,6 +1,9 @@
+ {
+ 	"steps": [
+ 		"MultiSSE",
++		"MSTGStats",
++		"LockElision",
++		"IPIAvoidance",
+ 		{
+ 			"name": "Printer",
+ 			"dot": "cfg.dot",
+@@ -36,11 +39,26 @@
+ 
+ 	"MultiSSE": {
+ 		"dump": true,
+-		"log_level": "debug"
++		"log_level": "info"
++	},
++
++	"MSTGStats": {
++		"dump": true,
++		"log_level": "info"
++	},
++
++	"LockElision": {
++		"dump": true,
++		"log_level": "info"
++	},
++
++	"IPIAvoidance": {
++		"dump": true,
++		"log_level": "info"
+ 	},
+ 
+ 	"logger": {
+ 		"StepManager": "info",
+-		"AUTOSAR": "debug"
++		"AUTOSAR": "info"
+ 	}
+ }

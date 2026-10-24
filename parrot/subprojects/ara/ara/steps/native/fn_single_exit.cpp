@@ -1,0 +1,148 @@
+// SPDX-FileCopyrightText: 2019 Björn Fiedler <fiedler@sra.uni-hannover.de>
+// SPDX-FileCopyrightText: 2020 Manuel Breiden
+// SPDX-FileCopyrightText: 2021 Bastian Fuhlenriede
+// SPDX-FileCopyrightText: 2021 Gerion Entrup <entrup@sra.uni-hannover.de>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+// vim: set noet ts=4 sw=4:
+
+#include "fn_single_exit.h"
+
+#include "common/llvm_common.h"
+
+#include <iostream>
+#include <list>
+#include <llvm/Analysis/LoopInfo.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/Casting.h>
+#include <llvm/Support/raw_os_ostream.h>
+#include <llvm/Transforms/Utils/BasicBlockUtils.h>
+#include <llvm/Transforms/Utils/UnifyFunctionExitNodes.h>
+
+namespace ara::step {
+	using namespace llvm;
+
+	std::string FnSingleExit::get_description() { return "Find unique exit BB and endless loops for functions."; }
+
+	inline void FnSingleExit::fill_unreachable_and_exit(BasicBlock*& unreachable, BasicBlock*& exit,
+	                                                    BasicBlock& probe) const {
+		for (Instruction& i : probe) {
+			if (isa<ReturnInst>(i)) {
+				exit = &probe;
+				break;
+			}
+			if (isa<UnreachableInst>(i)) {
+				unreachable = &probe;
+				break;
+			}
+		}
+	}
+
+	void FnSingleExit::run() {
+		graph::GraphData& graph_data = graph.get_graph_data();
+		for (auto& function : graph_data.get_module()) {
+			if (function.empty() || function.isIntrinsic()) {
+				continue;
+			}
+
+			// Execute LLVM's UnifyFunctionExitNodes pass
+			Module& module = graph.get_module();
+			legacy::FunctionPassManager fpm(&module);
+			fpm.add(createUnifyFunctionExitNodesPass());
+
+			if (fpm.run(function)) {
+				logger.debug() << function.getName().str() << ": UnifyFunctionExitNodes has modified something."
+				               << std::endl;
+			}
+
+			// exit block detection
+			// an exit block is a block with no successors
+			BasicBlock* exit_block = nullptr;
+			for (BasicBlock& _bb : function) {
+				if (succ_begin(&_bb) == succ_end(&_bb)) {
+					if (exit_block != nullptr) {
+						// one block is probably unreachable
+						BasicBlock* unreachable = nullptr;
+						BasicBlock* exit = nullptr;
+						fill_unreachable_and_exit(unreachable, exit, *exit_block);
+						fill_unreachable_and_exit(unreachable, exit, _bb);
+						if (unreachable != nullptr && exit != nullptr && unreachable != exit) {
+							// link unreachable block to exit block
+							// Technically, we create a branch instruction after an unreachable instruction
+							// This may break LLVM in some cases. The spec is unclear theryby.
+							// The other fix is to make ARA aware of ignoring unreachable instructions.
+							BranchInst::Create(exit, unreachable);
+						} else if (graph_data.basic_blocks[&_bb].is_part_of_exception) {
+							logger.warn() << "Function: " << function.getName().str()
+							              << " contains an exception exit block. We ignore this here." << std::endl;
+						} else {
+							logger.err() << "Function: " << function.getName().str() << " has multiple exit blocks."
+							             << std::endl;
+							logger.debug() << "Basicblock 1 with exit: " << *exit_block << std::endl;
+							logger.debug() << "Basicblock 2 with exit: " << _bb << std::endl;
+							logger.debug() << "Whole function: " << function << std::endl;
+							assert(false && "Something with the UnifyFunctionExitNodes went wrong.");
+						}
+					}
+					if (graph_data.basic_blocks[&_bb].is_part_of_exception) {
+						logger.warn() << "Function: " << function.getName().str()
+						              << " contains an exception exit block. We ignore this here." << std::endl;
+					} else {
+						exit_block = &_bb;
+					}
+				}
+			}
+			graph_data.functions[&function].exit_block = exit_block;
+			graph_data.basic_blocks[exit_block].is_exit_block = true;
+
+			// endless loop detection
+			DominatorTree dom_tree = DominatorTree(function);
+			LoopInfoBase<BasicBlock, Loop> loop_info;
+
+			dom_tree.updateDFSNumbers();
+			loop_info.analyze(dom_tree);
+
+			bool loop_found = false;
+			for (const Loop* loop : loop_info) {
+				if (loop->getParentLoop() == nullptr) {
+					for (auto it = loop->block_begin(); it != loop->block_end(); ++it) {
+						graph_data.basic_blocks[*it].is_part_of_loop = true;
+					}
+				}
+
+				SmallVector<BasicBlock*, 6> vec;
+				loop->getExitBlocks(vec);
+				if (vec.size() != 0) {
+					continue;
+				}
+				// we have an endless loop
+				graph_data.functions[&function].endless_loops.emplace_back(loop->getHeader());
+				graph_data.basic_blocks[loop->getHeader()].is_exit_loop_head = true;
+				loop_found = true;
+			}
+
+			// some nice printing
+			if (exit_block) {
+				if (loop_found) {
+					logger.debug() << "Function " << function.getName().str()
+					               << " has a regular exit and endless loops." << std::endl;
+				} else {
+					logger.debug() << "Function " << function.getName().str() << " has exactly one regular exit."
+					               << std::endl;
+				}
+			} else {
+				if (loop_found) {
+					logger.debug() << "Function " << function.getName().str() << " ends in an endless loop."
+					               << std::endl;
+				} else {
+					logger.warn() << "Function " << function.getName().str()
+					              << " neither has an exit block nor ends in an endless loop." << std::endl;
+				}
+			}
+		}
+	}
+} // namespace ara::step

@@ -1,0 +1,103 @@
+{
+  "cpus": [
+    {
+      "id": 0,
+      "tasks": {
+        "TaskA": {
+          "activation": 1,
+          "autostart": false,
+          "priority": 1,
+          "schedule": true
+        },
+        "TaskB": {
+          "activation": 1,
+          "autostart": false,
+          "priority": 2,
+          "schedule": true
+        },
+        "TaskC": {
+          "activation": 1,
+          "autostart": false,
+          "priority": 3,
+          "schedule": true
+        }
+      },
+      "counters": {
+        "SystemCounter": {
+          "mincycle": 1,
+          "maxallowedvalue": 1024,
+          "ticksperbase": 1,
+          "secondspertick": 0.001
+        }
+      },
+      "alarms": {
+        "Alarm1": {
+          "counter": "SystemCounter",
+          "autostart": true,
+          "cycletime": 100,
+          "alarmtime": 20,
+          "action": {
+            "action": "activatetask",
+            "task": "TaskF"
+          }
+        }
+      },
+      "resources": {},
+      "events": {},
+      "isrs": {
+        "Interrupt1": {
+          "category": 2,
+          "priority": 20,
+          "device": 37
+        }
+      }
+    },
+    {
+      "id": 1,
+      "tasks": {
+        "TaskD": {
+          "activation": 1,
+          "autostart": true,
+          "priority": 1,
+          "schedule": true
+        },
+        "TaskE": {
+          "activation": 1,
+          "autostart": false,
+          "priority": 2,
+          "schedule": true
+        },
+        "TaskF": {
+          "activation": 1,
+          "autostart": false,
+          "priority": 3,
+          "schedule": true
+        }
+      },
+      "counters": {
+        "SystemCounter2": {
+          "name": "SystemCounter2",
+          "mincycle": 1,
+          "maxallowedvalue": 1024,
+          "ticksperbase": 1,
+          "secondspertick": 0.001
+        }
+      },
+      "alarms": {
+        "Alarm2": {
+          "counter": "SystemCounter2",
+          "autostart": false,
+          "cycletime": 1000,
+          "alarmtime": 500,
+          "action": {
+            "action": "activatetask",
+            "task": "TaskD"
+          }
+        }
+      },
+      "resources": {},
+      "events": {},
+      "isrs": {}
+    }
+  ]
+}

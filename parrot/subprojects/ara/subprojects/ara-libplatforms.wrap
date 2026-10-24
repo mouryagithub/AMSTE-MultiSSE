@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://github.com/luhsra/ara-libplatforms.git
+revision = ecrts26 
+
+depth = 1

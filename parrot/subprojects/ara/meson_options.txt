@@ -1,0 +1,25 @@
+option('gui_required', type: 'boolean', value: false, yield: true,
+  description: 'Set all dependencies of ara gui to required if this option is true')
+option('python_optimization_level', type : 'integer', min : 0, max : 2, value : 0, yield: true,
+  description: 'Optimize python bytecode by the provided level. Levels 1 and 2 disable asserts so choose them wisely.')
+
+
+option('execute_ara', type: 'boolean', value: false, yield: true,
+  description: 'Build targets which executes ARA')
+
+option('autosar_benchmark', type: 'boolean', value: false, description: 'Default to false, used automatically by automotive_benchmark to set ara flags')
+
+option('test_timeout', type: 'integer', value: 100, description: 'Used by (some) testsuites like ara-xen-eval')
+option('no_qemu', type: 'boolean', value: false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')
+
+# do not change this, controled by root meson_options.txt
+option('build_hypersse_xen', type: 'boolean', value: false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')
+option('enable_irx', type: 'boolean', value: false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')
+option('build_qemu_tests', type: 'boolean', value: false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')
+option('build_step_tests', type: 'boolean', value: false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')
+option('build_toplevel_tests', type: 'boolean', value: false, yield: true,  description: 'do not edit, only modify parrots meson_options.txt')
+option('build_autosar_apps', type: 'boolean', value: false, yield: true,  description: 'do not edit, only modify parrots meson_options.txt')
+option('build_freertos_apps', type: 'boolean', value: false, yield: true,  description: 'do not edit, only modify parrots meson_options.txt')
+option('build_automotive_benchmark', type: 'boolean', value: false, yield: true,  description: 'do not edit, only modify parrots meson_options.txt')
+option('build_posix_apps', type: 'boolean', value: false, yield: true,  description: 'do not edit, only modify parrots meson_options.txt')
+option('build_generator_tests', type: 'boolean', value: false, yield: true,  description: 'do not edit, only modify parrots meson_options.txt')

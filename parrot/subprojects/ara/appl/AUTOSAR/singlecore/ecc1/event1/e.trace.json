@@ -1,0 +1,31 @@
+{
+  "vertices": [
+    [0, ["AUTOSAR_ActivateTask", "H1", "CallPath()"]],
+    [1, ["AUTOSAR_ActivateTask", "H1", "CallPath()"]],
+    [2, ["AUTOSAR_ClearEvent", "H3", "CallPath()"]],
+    [3, ["AUTOSAR_ClearEvent", "H3", "CallPath()"]],
+    [4, ["AUTOSAR_SetEvent", "H1", "CallPath()"]],
+    [5, ["AUTOSAR_SetEvent", "H2", "CallPath()"]],
+    [6, ["AUTOSAR_TerminateTask", "H1", "CallPath()"]],
+    [7, ["AUTOSAR_TerminateTask", "H2", "CallPath()"]],
+    [8, ["AUTOSAR_WaitEvent", "H3", "CallPath()"]],
+    [9, ["AUTOSAR_WaitEvent", "H3", "CallPath()"]],
+    [10, ["AUTOSAR_WaitEvent", "H3", "CallPath()"]],
+    [11, ["Idle"]],
+    [12, ["Start"]]
+  ],
+  "edges": [
+    [0, 1],
+    [1, 8],
+    [2, 9],
+    [3, 10],
+    [4, 2],
+    [5, 3],
+    [6, 5],
+    [7, 11],
+    [8, 4],
+    [9, 6],
+    [10, 7],
+    [12, 0]
+  ]
+}

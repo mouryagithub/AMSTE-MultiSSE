@@ -1,0 +1,215 @@
+# SPDX-FileCopyrightText: 2023 Andreas Kässens
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+from .arch_generic import GenericArch
+from ..elements import *
+from ara.os.autosar import Task, ISR, Counter, Event
+
+from .implementations import *
+from ara.graph import ABBType
+
+
+class PosixArch(GenericArch):
+
+    def __init__(self):
+        super(PosixArch, self).__init__()
+        self.IPI_SIG = 10  # SIGUSR1 on x86 Linux
+        self.TERM_SIG = 12  # SIGUSR2
+
+    def generate_startup_code(self):
+        # generate other functions
+        self.arch_rules.generate_functions()
+
+    # config-constraint-: (arch.self == posix) -> !arch.mpu
+    def generate_linkerscript(self):
+        """Posix does not require a linker script"""
+        pass
+
+    def generate_dataobjects_task_stacks(self):
+        """Generate the stacks for the tasks, including the task pointers"""
+        # Ignore the Idle thread and ISR subtasks
+        for v, task in self.ara_graph.instances.get(Task):
+
+            task.impl.basic_task = True
+
+            for n in self.ara_graph.instances.get_out_neighbors(v):
+                if isinstance(self.ara_graph.instances.vp.obj[n], Event):
+                    task.impl.basic_task = False
+
+            if task.impl.basic_task:
+                # With a stacksize of 8, we indicate we're having a
+                # basic task here, that runs on the shared stack
+                stacksize = 8
+
+                stack = DataObjectArray("uint8_t",
+                                        task.name + "_dynamic_state",
+                                        str(stacksize),
+                                        extern_c=True)
+                self.generator.source_file.data_manager.add(stack)
+
+                # Get a common stack pointer for all basic tasks
+                if task.cpu_id not in TaskImpl.basic_task_stackptr.keys():
+                    basic_stack = DataObjectArray(
+                        "uint8_t __attribute__((aligned(4096)))",
+                        f"shared_basic_stack_{task.cpu_id}",
+                        "4096",
+                        extern_c=True)
+                    stackptr = DataObject(
+                        "void *",
+                        f"OS_basic_task_stackptr_{task.cpu_id}",
+                        static_initializer=(basic_stack.name + "+ 4096"),
+                        extern_c=True)
+                    self.generator.source_file.data_manager.add(
+                        basic_stack, namespace=("arch", ))
+                    self.generator.source_file.data_manager.add(
+                        stackptr, namespace=("arch", ))
+                    TaskImpl.basic_task_stackptr[task.cpu_id] = stackptr
+                else:
+                    stackptr = TaskImpl.basic_task_stackptr[task.cpu_id]
+            else:
+                stacksize = str(4096)
+
+                stack = DataObjectArray("uint8_t",
+                                        task.name + "_stack",
+                                        stacksize,
+                                        extern_c=True)
+                self.generator.source_file.data_manager.add(stack)
+
+                stackptr = DataObject("void *",
+                                        "OS_" + task.name + "_stackptr")
+                self.generator.source_file.data_manager.add(
+                    stackptr, namespace=("arch", ))
+
+            task.impl.stack = stack
+            task.impl.stackptr = stackptr
+            task.impl.stacksize = stacksize
+
+    def generate_data_objects(self):
+        """Generate all dataobjects for the system"""
+        self.generate_dataobjects_task_stacks()  # From GenericArch
+        self.generate_dataobjects_task_entries()  # From GenericArch
+        self.generate_dataobjects_tcbs()
+
+    def generate_functions(self):
+        super().generate_functions()
+
+        self.generate_enable_irq_after_kernel()
+
+        kickoff = Function("AUTOSAR_kickoff", "void", [], extern_c=True)
+        kickoff.add(Statement("debug_core << __FUNCTION__ << endl"))
+
+        self.call(kickoff, "Machine::enable_interrupts")
+        self.generator.source_file.function_manager.add(kickoff)
+
+        # check if hardware timer is needed
+        for v, counter in self.ara_graph.instances.get(Counter):
+            if counter.softcounter == False:
+                self.generator.source_file.include("itimer.h")
+                self.call(self.generator.syscall_rules.StartOS,
+                          "ITimer::init",
+                          prepend=True)
+                break
+
+    def generate_dataobjects_tcbs(self):
+        for v, task in self.ara_graph.instances.get(Task):
+            initializer = "(&%s, %s, %s, %d, %s)" % (
+                task.impl.entry_function.name,
+                task.impl.stack.name,
+                task.impl.stackptr.name,
+                task.impl.task_id,
+                task.impl.stacksize,
+            )
+
+            tcb = DataObject("const arch::TCB", "OS_" + task.name + "_tcb",
+                             initializer)
+            tcb.allocation_prefix = "constexpr "
+            self.generator.source_file.data_manager.add(tcb,
+                                                        namespace=("arch", ))
+            task.impl.tcb_descriptor = tcb
+
+    def generate_enable_irq_after_kernel(self):
+        """Enable only those interrupts that can happen according to the OIL
+        model."""
+        block = Function("__OS_enable_irq_after_kernel", "void", [])
+        self.generator.source_file.function_manager.add(block)
+
+        block.add(Statement("sigset_t mask; sigfillset(&mask)"))
+
+        block.add(Statement("irq.enable_interrupts(&mask)"))
+
+    def generate_isr(self, isr):
+        # Forward declaration for the user defined function
+        self.generator.source_file.include("irq.h")
+
+        handler = Function(isr.name + "_wrapper", "void", ["int"])
+        self.generator.source_file.function_manager.add(handler)
+
+        self.call(handler, "AUTOSAR_ISR_" + isr.name)
+
+        if not isr.artificial and isr.device in [self.IPI_SIG, self.TERM_SIG]:
+            raise ValueError(
+                "ISR device {isr.device} conflicts with an internal signal")
+
+        forward = FunctionDeclaration("AUTOSAR_ISR_" + isr.name, extern_c=True)
+        self.generator.source_file.function_manager.add(forward)
+
+        self.call(self.generator.syscall_rules.StartOS,
+                  "arch::irq.enable",
+                  "void", [str(isr.device)],
+                  prepend=True)
+        self.call(self.generator.syscall_rules.StartOS,
+                  "arch::irq.set_handler",
+                  "void", [str(isr.device), handler.function_name],
+                  prepend=True)
+
+    def generate_isr_table(self, isrs):
+        self.generator.source_file.include("machine.h")
+
+        ipi = ISR(cfg=0,
+                  name="IPI",
+                  cpu_id=0,
+                  function=0,
+                  priority=0,
+                  category=0,
+                  device=self.IPI_SIG,
+                  artificial=True)
+
+        shutdown = ISR(cfg=0,
+                       name="TERM",
+                       cpu_id=0,
+                       function=0,
+                       priority=0,
+                       category=0,
+                       device=self.TERM_SIG,
+                       artificial=True)
+
+        # add IPI handler
+        IPI_handler = Function("AUTOSAR_ISR_IPI", "void", [], extern_c=True)
+        self.generator.syscall_rules.Reschedule(IPI_handler, True)
+        self.generator.source_file.function_manager.add(IPI_handler)
+
+        # add termination handler for shutdownAllCores
+        TERM_handler = Function("AUTOSAR_ISR_TERM", "void", [], extern_c=True)
+
+        self.call(TERM_handler, "arch::sync_all_hardware_threads", "void",
+                  ["SYNC_PRE_SHUTDOWNHOOK"])
+        self.call(TERM_handler, "AUTOSAR_ShutdownOS", "void", ["E_OK"])
+        self.generator.source_file.function_manager.add(TERM_handler)
+
+        for isr in isrs + [ipi, shutdown]:
+            self.generate_isr(isr)
+
+    def enable_irq_after_kernel(self, block):
+        """If there is a PROMISE=SERIALIZED, do not allow all interrupts after
+           kernel space is left. However, we only do this partial
+           enabling if a scheduler object is present in our system.
+           This is not true for syscalls=FSM. See
+           self.generate_enable_irq_after_kernel for details.
+
+        """
+        self.call(block, "__OS_enable_irq_after_kernel")
+
+    def generate_kernelspace(self, userspace, abb, arguments):
+        # Use the inline kernelspace variant
+        return self.generate_kernelspace__inline(userspace, abb, arguments)
