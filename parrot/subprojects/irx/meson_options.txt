@@ -1,0 +1,1 @@
+option('build_irx-tests', type : 'boolean', value : false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')

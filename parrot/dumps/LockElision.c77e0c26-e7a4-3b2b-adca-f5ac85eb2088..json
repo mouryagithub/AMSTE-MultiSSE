@@ -1,0 +1,55 @@
+{
+    "spin_states": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0
+    },
+    "DEADLOCK": {},
+    "callsites": {
+        "12": {
+            "state": 12,
+            "abb": 150,
+            "spins": false,
+            "elide": true,
+            "release_abb": 151
+        },
+        "40": {
+            "state": 40,
+            "abb": 227,
+            "spins": false,
+            "elide": true,
+            "release_abb": 228
+        },
+        "84": {
+            "state": 84,
+            "abb": 213,
+            "spins": false,
+            "elide": true,
+            "release_abb": 214
+        },
+        "160": {
+            "state": 160,
+            "abb": 199,
+            "spins": false,
+            "elide": true,
+            "release_abb": 200
+        },
+        "300": {
+            "state": 300,
+            "abb": 185,
+            "spins": false,
+            "elide": true,
+            "release_abb": 182
+        },
+        "568": {
+            "state": 568,
+            "abb": 167,
+            "spins": false,
+            "elide": true,
+            "release_abb": 168
+        }
+    },
+    "num_locks": 3,
+    "num_unneeded_locks": 3,
+    "num_unneeded_call_pairs": 6
+}

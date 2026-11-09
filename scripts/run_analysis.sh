@@ -1,75 +1,50 @@
 #!/bin/bash
 # ============================================================
-# run_analysis.sh — Run MultiSSE inside the parrot-ara container
-# Usage: wsl -d rocky -e bash /mnt/d/Major_Project/run_analysis.sh
+# run_analysis.sh — MultiSSE AUTOSAR Analysis Runner
+# Running natively on Rocky Linux 9.8 with Podman
 # ============================================================
 
-PARROT_DIR="/mnt/d/Major_Project/parrot"
-IMAGE="parrot-ara"
+set -e
 
-echo "============================================"
-echo "  MultiSSE AUTOSAR Analysis Runner"
-echo "============================================"
+PROJECT_DIR="/home/mourya/projects/Major_Project"
+PARROT_DIR="${PROJECT_DIR}/parrot"
+IMAGE="localhost/parrot-ara:latest"
 
-# Check image exists
+# Default target: 2-core automotive minimal example
+APP="${1:-build/subprojects/ara/appl/AUTOSAR/autosar_multicore_minexample.pi4.ll}"
+OIL="${2:-subprojects/ara/appl/AUTOSAR/multicore/minexample.json}"
+
+echo "============================================================"
+echo "  🚀 MultiSSE AUTOSAR Static Analysis Runner"
+echo "  Target Application: $APP"
+echo "  OIL/System Config : $OIL"
+echo "============================================================"
+
+# Check that Podman image is ready
 if ! podman image exists "$IMAGE" 2>/dev/null; then
-    echo "ERROR: Image '$IMAGE' not found."
-    echo "Build it first: cd /mnt/d/Major_Project/parrot/Docker && podman build -t parrot-ara ."
+    echo "❌ ERROR: Container image '$IMAGE' not found!"
+    echo "Check 'podman images' to ensure localhost/parrot-ara is built."
     exit 1
 fi
 
-echo "✅ Image found: $IMAGE"
-echo "Starting analysis container..."
+echo "✅ Container environment verified: $IMAGE"
+echo "⏳ Launching MultiSSE state exploration inside container..."
 echo ""
 
+# Run ARA MultiSSE analysis inside the container with official wrapper and native libraries
 podman run --rm -it \
-    --volume "${PARROT_DIR}:${PARROT_DIR}:rw" \
-    --workdir "${PARROT_DIR}" \
-    --name parrot-dev \
-    "$IMAGE" \
-    bash -c "
-set -e
-echo '=== Step 1: Meson Setup ==='
-meson setup build \
-    --native-file native-debian.ini \
-    --wipe \
-    -Dbuild_autosar_apps=true \
-    -Denable_arm=true \
-    -Dbuild_i4copter=true \
-    -Dbuild_synthetic_apps=true \
-    -Dbuild_generator_tests=true \
-    2>&1 | tail -20
+  -v "${PROJECT_DIR}:${PROJECT_DIR}:rw" \
+  -w "${PARROT_DIR}" \
+  -e LD_LIBRARY_PATH="${PARROT_DIR}/build/subprojects/svf" \
+  -e SVF_EXT_API_JSON="${PARROT_DIR}/subprojects/svf/ExtAPI.json" \
+  "$IMAGE" \
+  ./build/subprojects/ara/ara.py \
+  "$APP" \
+  --oilfile "$OIL" \
+  --step MultiSSE \
+  --os AUTOSAR
 
-echo ''
-echo '=== Step 2: Enable timing annotations (with_times: true) ==='
-python3 -c \"
-import json, glob, os
-files = glob.glob('settings/multisse*.json.in') + glob.glob('subprojects/ara/settings/multisse*.json')
-for f in files:
-    with open(f) as fh:
-        content = fh.read()
-    if 'with_times' not in content and 'MultiSSE' in content:
-        print(f'  Patching: {f}')
-        data = json.loads(content.replace('@', ''))
-    print('  Config files found:', files)
-\"
-echo '  ✅ Check settings/multisse_autosar_apps.json.in for with_times'
-grep -r 'with_times' settings/ subprojects/ara/settings/ 2>/dev/null || echo '  NOTE: Set with_times manually if needed'
-
-echo ''
-echo '=== Step 3: Build (ninja) ==='
-ninja -C build -j\$(nproc) 2>&1 | tail -30
-
-echo ''
-echo '=== Step 4: Run MultiSSE conformance tests ==='
-meson test -C build --suite multisse -v 2>&1 | tail -50
-
-echo ''
-echo '=== Step 5: Run AUTOSAR generator tests ==='
-meson test -C build --suite autosar_generator_pi4 2>&1 | tail -30
-
-echo ''
-echo '============================================'
-echo '  Analysis Complete! Check results in build/'
-echo '============================================'
-"
+echo ""
+echo "============================================================"
+echo "  ✅ MultiSSE Analysis Finished Successfully!"
+echo "============================================================"

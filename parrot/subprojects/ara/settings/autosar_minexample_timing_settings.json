@@ -1,0 +1,29 @@
+{
+	"steps": [
+		"MultiSSE",
+		"MSTGStats",
+		"LockElision",
+		"IPIAvoidance"
+	],
+
+	"MultiSSE": {
+		"dump": true,
+		"log_level": "info",
+		"with_times": true
+	},
+
+	"MSTGStats": {
+		"dump": true,
+		"log_level": "info"
+	},
+
+	"LockElision": {
+		"dump": true,
+		"log_level": "info"
+	},
+
+	"IPIAvoidance": {
+		"dump": true,
+		"log_level": "info"
+	}
+}

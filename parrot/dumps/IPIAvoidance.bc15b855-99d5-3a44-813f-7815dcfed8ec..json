@@ -1,0 +1,35 @@
+{
+    "places": [
+        {
+            "state": 32,
+            "abb": 152,
+            "ipi_needed": true
+        },
+        {
+            "state": 70,
+            "abb": 229,
+            "ipi_needed": true
+        },
+        {
+            "state": 134,
+            "abb": 215,
+            "ipi_needed": true
+        },
+        {
+            "state": 250,
+            "abb": 197,
+            "ipi_needed": true
+        },
+        {
+            "state": 470,
+            "abb": 183,
+            "ipi_needed": true
+        },
+        {
+            "state": 898,
+            "abb": 169,
+            "ipi_needed": true
+        }
+    ],
+    "num_not_used_ipis": 0
+}

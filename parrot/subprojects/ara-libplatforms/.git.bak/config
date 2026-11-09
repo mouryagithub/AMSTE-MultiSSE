@@ -1,0 +1,9 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+[remote "origin"]
+	url = https://github.com/luhsra/ara-libplatforms.git
+	fetch = +refs/tags/ecrts26:refs/tags/ecrts26

@@ -1,0 +1,8 @@
+# posix, currently only supported as native build
+option('enable_posix', type: 'boolean', value: false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')
+
+# arm
+option('enable_arm', type: 'boolean', value: false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')
+
+# riscv
+option('enable_riscv', type: 'boolean', value: false, yield: true, description: 'do not edit, only modify parrots meson_options.txt')

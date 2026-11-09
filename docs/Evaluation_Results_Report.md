@@ -2,7 +2,7 @@
 ### *Phase 1 (50% Milestone): Reproducibility, Toolchain Establishment & Baseline State Space Exploration*
 
 **Project Team:** K. Deveswar · P. Mourya Sai · E. Venkata Harsha Vardhan  
-**Department / Institution:** Department of Electronics and Communication Engineering / Computer Science, Vasavi College of Engineering  
+**Department / Institution:** Department of Electronics and Communication Engineering , Vasavi College of Engineering  
 **Project Supervisor:** Mr. V. Krishna Mohan  
 **Reference Paper:** *Applied Static Analysis and Specialization of Cross-Core Syscalls for Multi-Core AUTOSAR OS* — Real-Time Systems, vol. 60, pp. 491–533, 2024 (Entrup et al.)
 
