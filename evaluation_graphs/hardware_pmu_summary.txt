@@ -79,3 +79,55 @@ Statistical Summary:
   - Phase 3->4 (k -> u):      Mean = 333.2 cycles [Min: 330, Max: 338]
   - Total IPI Latency:        Mean = 1921.0 cycles [Min: 1858, Max: 1965]
 ================================================================================
+
+--------------------------------------------------------------------------------
+4. LATEST PHYSICAL PMU CAPTURE (SPINLOCK PAIR - test_spinlock.img)
+Raspberry Pi 4 Model B (Cortex-A72 @ 1.5 GHz) - putty_spinlock_uart.txt:
+--------------------------------------------------------------------------------
+val[0]=0
+val[1]=306
+val[2]=349
+val[3]=498
+val[4]=792
+val[5]=1127
+val[6]=1175
+val[7]=1201
+val[8]=1548
+
+Measured Phase Deltas:
+  d[0>1] = 306 cycles  (User -> Kernel transition for GetSpinlock)
+  d[1>2] =  43 cycles  (Lock acquisition setup)
+  d[2>3] = 149 cycles  (Hardware atomic CAS / LDREX-STREX acquisition)
+  d[3>4] = 294 cycles  (Kernel -> User return transition)
+  --- TOTAL GetSpinlock: 792 cycles ---
+
+  d[4>5] = 335 cycles  (User -> Kernel transition for ReleaseSpinlock)
+  d[5>6] =  48 cycles  (Unlock setup)
+  d[6>7] =  26 cycles  (Clear spinlock flag)
+  d[7>8] = 347 cycles  (Kernel -> User return transition)
+  --- TOTAL ReleaseSpinlock: 756 cycles ---
+
+  === TOTAL SPINLOCK PAIR LATENCY: 1,548 cycles ===
+  Hardware Verification: SUCCESS 1 0:0, Tests finished: ALL OK
+================================================================================
+
+--------------------------------------------------------------------------------
+5. PHYSICAL PMU CAPTURE: L1/L2 DATA-CACHE MISSES (test_cache.img)
+Raspberry Pi 4 Model B (Cortex-A72 @ 1.5 GHz) - putty_cache_uart:
+Event: ARM PMU Event 0x03 (L1 Data Cache Refill) across 1MB buffer (64B stride)
+--------------------------------------------------------------------------------
+Across 5 consecutive hardware boot runs:
+  - Run 1: Cold = 16,389 | Warm1 = 71 | IPI Evicted = 156 | Warm2 = 75
+  - Run 2: Cold = 16,388 | Warm1 = 71 | IPI Evicted = 159 | Warm2 = 75
+  - Run 3: Cold = 16,387 | Warm1 = 71 | IPI Evicted = 183 | Warm2 = 77
+  - Run 4: Cold = 16,387 | Warm1 = 71 | IPI Evicted = 153 | Warm2 = 77
+  - Run 5: Cold = 16,385 | Warm1 = 71 | IPI Evicted = 181 | Warm2 = 77
+
+Statistical Averages (Plotted in Figure 13):
+  (1) Cache Cold:        16,387 misses (Exact 1MB / 64B cache line stride)
+  (2) Cache Warm:            71 misses (Settled baseline post-warmup)
+  (3) IPI Occurred:         166 misses (+95 misses evicted by GIC interrupt handler)
+  (4) Cache Warm (Post):     76 misses (Settled post-IPI baseline)
+
+Hardware Verification: SUCCESS 1 0:0, Tests finished: ALL OK
+================================================================================

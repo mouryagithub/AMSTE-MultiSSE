@@ -22,10 +22,10 @@ plt.rcParams.update({
 
 # ==============================================================================
 # FIGURE 14: AMOUNT OF CYCLES NEEDED FOR EACH PHASE OF A SPINLOCK (Fig. 14)
-# Real Hardware PMU Measurements (Raspberry Pi 4 Cortex-A72):
-# GetSpinlock: 306 (u->k), 192 (lock acquire), 294 (k->u) -> Total: 792 cycles
-# ReleaseSpinlock: 303 (u->k), 96 (unlock clear), 325 (k->u) -> Total: 724 cycles
-# Total Spinlock Pair Latency: 1,516 cycles (Paper: 1,514 cycles)
+# Real Hardware PMU Measurements from putty_spinlock_uart.txt (RPi 4 Cortex-A72):
+# (a) GetSpinlock: u->k (306), lock (498, +192), k->u (792, +294) -> Total: 792 cycles
+# (b) ReleaseSpinlock: u->k (335), unlock (409, +74), k->u (756, +347) -> Total: 756 cycles
+# Total Spinlock Pair Latency: 1,548 cycles
 # ==============================================================================
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 4.4), sharey=True)
 
@@ -51,7 +51,7 @@ ax1.text(2.25, 806, '792\n(+294)', color='#1f77b4', fontsize=9.5, ha='center', v
 
 # (b) ReleaseSpinlock
 x2 = [0, 1, 2, 3]
-y2 = [303, 399, 724, 724]
+y2 = [335, 409, 756, 756]
 labels2 = [r'$\downarrow u \to k$', 'unlock', r'$\downarrow k \to u$']
 
 ax2.step(x2, y2, where='post', color='#1f77b4', linewidth=2.2, label='Measured on RPi 4')
@@ -64,9 +64,9 @@ ax2.set_title('(b) ReleaseSpinlock', fontsize=11.5, pad=8)
 ax2.grid(True, linestyle='--', alpha=0.45)
 ax2.legend(loc='upper left', frameon=True)
 
-ax2.text(0.4, 315, '303', color='#1f77b4', fontsize=9.5, ha='center', va='bottom')
-ax2.text(1.25, 412, '399\n(+96)', color='#1f77b4', fontsize=9.5, ha='center', va='bottom')
-ax2.text(2.25, 738, '724\n(+325)', color='#1f77b4', fontsize=9.5, ha='center', va='bottom')
+ax2.text(0.4, 345, '335', color='#1f77b4', fontsize=9.5, ha='center', va='bottom')
+ax2.text(1.25, 420, '409\n(+74)', color='#1f77b4', fontsize=9.5, ha='center', va='bottom')
+ax2.text(2.25, 770, '756\n(+347)', color='#1f77b4', fontsize=9.5, ha='center', va='bottom')
 
 fig.suptitle('Fig. 14 Amount of cycles needed for each phase of a spinlock (see Fig. 11)', fontsize=11, y=0.01)
 plt.tight_layout()
@@ -77,20 +77,15 @@ print("Figure 14 generated.")
 
 # ==============================================================================
 # FIGURE 12: AMOUNT OF CYCLES NEEDED FOR EACH PHASE OF SENDING (a) AND RECEIVING (b) AN IPI
-# Empirical Pi 4 multi-run statistics:
-# d[0>1] (u->k): Mean 285 [Min 264, Max 309]
-# d[1>2] (set task): Mean 43 [Min 43, Max 44] -> Cumulative Mean: 328
-# d[2>3] (wait/GIC): Mean 1260 [Min 1213, Max 1282] -> Cumulative Mean: 1588
-# d[3>4] (k->u): Mean 333 [Min 330, Max 338] -> Cumulative Mean: 1921
+# Real Hardware PMU Measurements from putty_uart.txt (RPi 4 Cortex-A72, 5 boots):
 # ==============================================================================
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.5, 4.4))
 
-# (a) Sender: Mean curve & exact empirical hardware bounds from 5 runs
+# (a) Sender: Mean values and exact physical variance bands across 5 boots
 xs = [0, 1, 2, 3, 4]
 ys = [285, 328, 1588, 1921, 1921]
 labels_s = [r'$\uparrow u \to k$', 'set task', 'wait', r'$\uparrow k \to u$']
 
-# Exact min and max bounds measured across boots on physical Pi 4
 ax1.fill_between([0, 1], [264, 264], [309, 309], color='#1f77b4', alpha=0.18, label='Empirical Hardware Spread')
 ax1.fill_between([1, 2], [308, 308], [352, 352], color='#1f77b4', alpha=0.18)
 ax1.fill_between([2, 3], [1521, 1521], [1634, 1634], color='#1f77b4', alpha=0.18)
@@ -146,12 +141,18 @@ plt.close()
 print("Figure 12 generated.")
 
 # ==============================================================================
-# FIGURE 13: CACHE MISSES
+# FIGURE 13: CACHE MISSES OF A DATA-INTENSIVE TASK AFTER AN IPI IS RECEIVED (Fig. 13)
+# Real Hardware PMU Measurements from putty_cache_uart across 5 boots (RPi 4 Cortex-A72):
+# (1) Cold: 16,387 misses (1MB / 64B cache line stride)
+# (2) Warm: 71 misses (Settled post-warmup)
+# (3) IPI occurred: 166 misses (L1 cache lines evicted by GIC interrupt handler)
+# (4) Warm: 76 misses (Settled post-IPI)
 # ==============================================================================
 fig, ax = plt.subplots(figsize=(7.0, 4.4))
 
 cats = ['(1)\nCache Cold', '(2)\nCache Warm', '(3)\nIPI occurred', '(4)\nCache Warm']
-misses = [16420, 72, 284, 69]
+# Exact empirical averages from physical Pi 4 putty_cache_uart
+misses = [16387, 71, 166, 76]
 bar_colors = ['#1f77b4', '#1f77b4', '#1f77b4', '#1f77b4']
 
 bars = ax.bar(cats, misses, color=bar_colors, width=0.50, edgecolor='#124b78', linewidth=0.8, label='IPI Receiver: Cache Misses')
@@ -174,20 +175,16 @@ plt.close()
 print("Figure 13 generated.")
 
 # ==============================================================================
-# FIGURE 15: OPTIMIZED EXECUTION TIME OF TASK T11 (BOTH OPTIMIZATIONS COMBINED)
-# Incorporating BOTH Lock Elision & IPI Avoidance:
-# GL(S1) Elision: Saves 724 cycles
-# RL(S1) Elision: Saves 660 cycles
-# AT(T01) IPI Avoidance: Saves 1,279 cycles
-# Total T11 WCET Reduction: from 7,068 -> 4,642 cycles (34.3% speedup)
+# FIGURE 15: OPTIMIZED EXECUTION TIME OF TASK T11 (Fig. 15)
+# Combines measured Spinlock savings (1,548 cycles) and IPI savings (1,921 cycles)
 # ==============================================================================
 fig, ax = plt.subplots(figsize=(8.5, 4.6))
 
 abbs = ['09+10\nGL(S1)', '11+12\nRL(S1)', '13+14\nAT(T02)', '15+16\nAT(T01)', '17+18\nAT(T21)']
 x_indices = [0, 1, 2, 3, 4, 5]
 
-y_noopt = [792, 1516, 3437, 5117, 7068, 7068]
-y_opt = [68, 132, 2053, 2695, 4642, 4642]
+y_noopt = [792, 1548, 3469, 5149, 7070, 7070]
+y_opt = [68, 136, 2057, 2699, 4620, 4620]
 
 ax.step(x_indices, y_noopt, where='post', color='#1f77b4', linewidth=2.2, label='T11 noopt (Baseline: Locks + IPIs)')
 ax.step(x_indices, y_opt, where='post', color='#ff7f0e', linewidth=2.2, label='T11 opt (Lock Elision + IPI Avoidance)')
@@ -201,16 +198,16 @@ ax.grid(True, linestyle='--', alpha=0.45)
 ax.legend(loc='upper left', frameon=True)
 
 ax.text(0.5, 830, '792', color='#1f77b4', fontsize=9, ha='center')
-ax.text(1.5, 1560, '+724', color='#1f77b4', fontsize=9, ha='center')
-ax.text(2.5, 3490, '+1921', color='#1f77b4', fontsize=9, ha='center')
-ax.text(3.5, 5170, '+1680', color='#1f77b4', fontsize=9, ha='center')
-ax.text(4.5, 7120, '7068', color='#1f77b4', fontsize=9, ha='center', fontweight='bold')
+ax.text(1.5, 1590, '+756', color='#1f77b4', fontsize=9, ha='center')
+ax.text(2.5, 3520, '+1921', color='#1f77b4', fontsize=9, ha='center')
+ax.text(3.5, 5200, '+1680', color='#1f77b4', fontsize=9, ha='center')
+ax.text(4.5, 7120, '7070', color='#1f77b4', fontsize=9, ha='center', fontweight='bold')
 
 ax.text(0.5, 100, '68', color='#ff7f0e', fontsize=9, ha='center')
-ax.text(1.5, 170, '+64', color='#ff7f0e', fontsize=9, ha='center')
+ax.text(1.5, 175, '+68', color='#ff7f0e', fontsize=9, ha='center')
 ax.text(2.5, 2110, '+1921', color='#ff7f0e', fontsize=9, ha='center')
 ax.text(3.5, 2750, '+642 (IPI omitted)', color='#ff7f0e', fontsize=9, ha='center')
-ax.text(4.5, 4700, '4642 (-34.3%)', color='#ff7f0e', fontsize=9, ha='center', fontweight='bold')
+ax.text(4.5, 4675, '4620 (-34.6%)', color='#ff7f0e', fontsize=9, ha='center', fontweight='bold')
 
 fig.suptitle('Fig. 15 Optimized execution time of the example application Task T11.\nThe execution time is reduced by Lock Elision in ABB10/12 and omitting the IPI in ABB16.\nThe BCET is subtracted on the y-axis to make the difference between the times more visible', fontsize=9.5, y=0.01)
 plt.tight_layout()
