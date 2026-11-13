@@ -45,7 +45,7 @@ cdef class PyIRModuleInterpreter:
     def __dealloc__(self):
         del self.irx
 
-    def parseIRFiles(self, list[string] InputFilenames, name = b"CompositeModule"):
+    def parseIRFiles(self, InputFilenames, name = b"CompositeModule"):
         cdef vector[string] vFiles
         for f in InputFilenames:
             vFiles.push_back(f.encode("utf-8"))

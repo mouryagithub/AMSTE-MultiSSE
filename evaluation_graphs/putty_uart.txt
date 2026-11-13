@@ -1,0 +1,367 @@
+ 3.98 [sdcard] pieeprom.upd not found
+  3.98 [sdcard] recover4.elf not found
+  3.98 [sdcard] recovery.elf not found
+  4.13 Read start4.elf bytes  2303104 hnd 0x4
+  4.17 Read fixup4.dat bytes     5512 hnd 0x4b
+  4.19 0x00d03115 0x00000000 0x00003fff
+  4.22 MEM GPU: 76 ARM: 948 TOTAL: 1024
+  4.59 Starting start4.elf @ 0xfec00200 partition 1
+  4.16 XHCI-STOP
+  4.16 xHC0 ver: 256 HCS: 05000420 fc000031 00e70004 HCC: 002841eb
+  4.16 USBSTS 18
+  4.17 PCI0 reset
+  4.18 +
+
+MESS:00:00:04.192965:0: arasan: arasan_emmc_open
+MESS:00:00:04.194622:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.314806:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.327676:0: arasan: arasan_emmc_set_clock C0: 0x00800f00 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 390000 max: 400000 delay: 5
+MESS:00:00:04.374803:0: boot-part: 1 fs-type: 0
+MESS:00:00:04.376215:0: boot-part: 1 fs-type: 3
+MESS:00:00:04.380595:0: arasan: arasan_emmc_set_clock C0: 0x00800f06 C1: 0x000e0207 emmc: 200000000 actual: 50000000 div: 0x00000002 target: 50000000 min: 0 max: 50000000 delay: 1
+MESS:00:00:04.997406:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.000097:0: board: boardrev d03115 otp d03115
+MESS:00:00:05.005070:0: brfs: File read: 147 bytes
+MESS:00:00:05.033080:0: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.037588:0: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.055532:0: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.060033:0: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.067522:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.562260:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.567809:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.576822:0: *** Restart logging
+MESS:00:00:05.578618:0: brfs: File read: 147 bytes
+MESS:00:00:05.588307:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.593338:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.603956:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.608981:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.614578:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.628362:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.633385:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.644001:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.649029:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.654627:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.663390:0: HDMI0: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.669032:0: HDMI1: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.677066:0: dtb_file 'bcm2711-rpi-4-b.dtb'
+MESS:00:00:05.686701:0: brfs: File read: /mfs/sd/bcm2711-rpi-4-b.dtb
+MESS:00:00:05.689949:0: Loaded 'bcm2711-rpi-4-b.dtb' to 0x100 size 0xd619
+MESS:00:00:05.734308:0: brfs: File read: 54809 bytes
+MESS:00:00:05.738425:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.761264:0: brfs: File read: 147 bytes
+MESS:00:00:05.763072:0: Failed to open command line file 'cmdline.txt'
+MESS:00:00:06.328962:0: brfs: File read: /mfs/sd/test.img
+MESS:00:00:06.331252:0: Loaded 'test.img' to 0x0 size 0x512000
+MESS:00:00:06.337128:0: uart: Set PL011 baud rate to 103448.300000 Hz
+MESS:00:00:06.345887:0: uart: Baud rate change done...
+MESS:00:00:06.347906:0:0213
+val[0]=0
+val[1]=264
+val[2]=308
+val[3]=1521
+val[4]=1858
+d[0>1]=264
+d[1>2]=44
+d[2>3]=1213
+d[3>4]=337
+expect: 01
+traced: 01
+
+  +
+SUCCESS 1 0:0
+  +
+Tests finished: ALL OK
+  3.81 [sdcard] pieeprom.upd not found
+  3.81 [sdcard] recover4.elf not found
+  3.81 [sdcard] recovery.elf not found
+  3.45 Read start4.elf bytes  2303104 hnd 0x4
+  3.49 Read fixup4.dat bytes     5512 hnd 0x4b
+  3.51 0x00d03115 0x00000000 0x00003fff
+  3.54 MEM GPU: 76 ARM: 948 TOTAL: 1024
+  3.91 Starting start4.elf @ 0xfec00200 partition 1
+  3.99 XHCI-STOP
+  3.99 xHC0 ver: 256 HCS: 05000420 fc000031 00e70004 HCC: 002841eb
+  4.00 USBSTS 18
+  4.00 PCI0 reset
+  4.01 +
+
+MESS:00:00:04.024967:0: arasan: arasan_emmc_open
+MESS:00:00:04.026624:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.146812:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.159682:0: arasan: arasan_emmc_set_clock C0: 0x00800f00 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 390000 max: 400000 delay: 5
+MESS:00:00:04.206799:0: boot-part: 1 fs-type: 0
+MESS:00:00:04.208212:0: boot-part: 1 fs-type: 3
+MESS:00:00:04.212590:0: arasan: arasan_emmc_set_clock C0: 0x00800f06 C1: 0x000e0207 emmc: 200000000 actual: 50000000 div: 0x00000002 target: 50000000 min: 0 max: 50000000 delay: 1
+MESS:00:00:04.831019:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:04.833720:0: board: boardrev d03115 otp d03115
+MESS:00:00:04.838682:0: brfs: File read: 147 bytes
+MESS:00:00:04.866680:0: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:04.871188:0: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:04.889147:0: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:04.893648:0: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:04.901140:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.463160:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.468708:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.477724:0: *** Restart logging
+MESS:00:00:05.479519:0: brfs: File read: 147 bytes
+MESS:00:00:05.489207:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.494237:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.504855:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.509878:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.515477:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.529262:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.534284:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.544900:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.549930:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.555527:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.564290:0: HDMI0: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.569932:0: HDMI1: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.577955:0: dtb_file 'bcm2711-rpi-4-b.dtb'
+MESS:00:00:05.587564:0: brfs: File read: /mfs/sd/bcm2711-rpi-4-b.dtb
+MESS:00:00:05.590810:0: Loaded 'bcm2711-rpi-4-b.dtb' to 0x100 size 0xd619
+MESS:00:00:05.635176:0: brfs: File read: 54809 bytes
+MESS:00:00:05.639292:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.662079:0: brfs: File read: 147 bytes
+MESS:00:00:05.663887:0: Failed to open command line file 'cmdline.txt'
+MESS:00:00:06.229835:0: brfs: File read: /mfs/sd/test.img
+MESS:00:00:06.232125:0: Loaded 'test.img' to 0x0 size 0x512000
+MESS:00:00:06.238002:0: uart: Set PL011 baud rate to 103448.300000 Hz
+MESS:00:00:06.246760:0: uart: Baud rate change done...
+MESS:00:00:06.248780:0:0123
+val[0]=0
+val[1]=288
+val[2]=332
+val[3]=1601
+val[4]=1931
+d[0>1]=288
+d[1>2]=44
+d[2>3]=1269
+d[3>4]=330
+expect: 01
+traced: 01
+
+  +
+SUCCESS 1 0:0
+  +
+Tests finished: ALL OK
+  3.81 [sdcard] pieeprom.upd not found
+  3.81 [sdcard] recover4.elf not found
+  3.81 [sdcard] recovery.elf not found
+  3.48 Read start4.elf bytes  2303104 hnd 0x4
+  3.52 Read fixup4.dat bytes     5512 hnd 0x4b
+  3.54 0x00d03115 0x00000000 0x00003fff
+  3.57 MEM GPU: 76 ARM: 948 TOTAL: 1024
+  3.94 Starting start4.elf @ 0xfec00200 partition 1
+  3.99 XHCI-STOP
+  3.99 xHC0 ver: 256 HCS: 05000420 fc000031 00e70004 HCC: 002841eb
+  4.00 USBSTS 18
+  4.00 PCI0 reset
+  4.01 +
+
+MESS:00:00:04.027839:0: arasan: arasan_emmc_open
+MESS:00:00:04.029497:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.149686:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.162556:0: arasan: arasan_emmc_set_clock C0: 0x00800f00 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 390000 max: 400000 delay: 5
+MESS:00:00:04.209691:0: boot-part: 1 fs-type: 0
+MESS:00:00:04.211103:0: boot-part: 1 fs-type: 3
+MESS:00:00:04.215483:0: arasan: arasan_emmc_set_clock C0: 0x00800f06 C1: 0x000e0207 emmc: 200000000 actual: 50000000 div: 0x00000002 target: 50000000 min: 0 max: 50000000 delay: 1
+MESS:00:00:04.833773:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:04.836464:0: board: boardrev d03115 otp d03115
+MESS:00:00:04.841436:0: brfs: File read: 147 bytes
+MESS:00:00:04.869439:0: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:04.873947:0: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:04.891902:0: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:04.896403:0: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:04.903893:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.398606:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.404155:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.413173:0: *** Restart logging
+MESS:00:00:05.414965:0: brfs: File read: 147 bytes
+MESS:00:00:05.424653:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.429683:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.440301:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.445325:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.450923:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.464706:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.469729:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.480345:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.485374:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.490971:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.499734:0: HDMI0: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.505381:0: HDMI1: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.513401:0: dtb_file 'bcm2711-rpi-4-b.dtb'
+MESS:00:00:05.523045:0: brfs: File read: /mfs/sd/bcm2711-rpi-4-b.dtb
+MESS:00:00:05.526293:0: Loaded 'bcm2711-rpi-4-b.dtb' to 0x100 size 0xd619
+MESS:00:00:05.570758:0: brfs: File read: 54809 bytes
+MESS:00:00:05.574878:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.597789:0: brfs: File read: 147 bytes
+MESS:00:00:05.599596:0: Failed to open command line file 'cmdline.txt'
+MESS:00:00:06.165180:0: brfs: File read: /mfs/sd/test.img
+MESS:00:00:06.167471:0: Loaded 'test.img' to 0x0 size 0x512000
+MESS:00:00:06.173347:0: uart: Set PL011 baud rate to 103448.300000 Hz
+MESS:00:00:06.182105:0: uart: Baud rate change done...
+MESS:00:00:06.184124:0:0213
+val[0]=0
+val[1]=288
+val[2]=331
+val[3]=1592
+val[4]=1930
+d[0>1]=288
+d[1>2]=43
+d[2>3]=1261
+d[3>4]=338
+expect: 01
+traced: 01
+
+  +
+SUCCESS 1 0:0
+  +
+Tests finished: ALL OK
+  3.81 [sdcard] pieeprom.upd not found
+  3.81 [sdcard] recover4.elf not found
+  3.81 [sdcard] recovery.elf not found
+  3.48 Read start4.elf bytes  2303104 hnd 0x4
+  3.52 Read fixup4.dat bytes     5512 hnd 0x4b
+  3.54 0x00d03115 0x00000000 0x00003fff
+  3.57 MEM GPU: 76 ARM: 948 TOTAL: 1024
+  3.94 Starting start4.elf @ 0xfec00200 partition 1
+  3.99 XHCI-STOP
+  3.99 xHC0 ver: 256 HCS: 05000420 fc000031 00e70004 HCC: 002841eb
+  4.00 USBSTS 18
+  4.00 PCI0 reset
+  4.01 +
+
+MESS:00:00:04.028137:0: arasan: arasan_emmc_open
+MESS:00:00:04.029794:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.149984:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.162854:0: arasan: arasan_emmc_set_clock C0: 0x00800f00 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 390000 max: 400000 delay: 5
+MESS:00:00:04.209966:0: boot-part: 1 fs-type: 0
+MESS:00:00:04.211379:0: boot-part: 1 fs-type: 3
+MESS:00:00:04.215757:0: arasan: arasan_emmc_set_clock C0: 0x00800f06 C1: 0x000e0207 emmc: 200000000 actual: 50000000 div: 0x00000002 target: 50000000 min: 0 max: 50000000 delay: 1
+MESS:00:00:04.835677:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:04.838372:0: board: boardrev d03115 otp d03115
+MESS:00:00:04.843340:0: brfs: File read: 147 bytes
+MESS:00:00:04.871358:0: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:04.875866:0: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:04.893808:0: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:04.898309:0: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:04.905796:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.367514:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.373067:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.382083:0: *** Restart logging
+MESS:00:00:05.383872:0: brfs: File read: 147 bytes
+MESS:00:00:05.393563:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.398593:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.409211:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.414234:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.419833:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.433618:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.438641:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.449257:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.454286:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.459884:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.468647:0: HDMI0: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.474288:0: HDMI1: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.482317:0: dtb_file 'bcm2711-rpi-4-b.dtb'
+MESS:00:00:05.491964:0: brfs: File read: /mfs/sd/bcm2711-rpi-4-b.dtb
+MESS:00:00:05.495211:0: Loaded 'bcm2711-rpi-4-b.dtb' to 0x100 size 0xd619
+MESS:00:00:05.539573:0: brfs: File read: 54809 bytes
+MESS:00:00:05.543693:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.566486:0: brfs: File read: 147 bytes
+MESS:00:00:05.568295:0: Failed to open command line file 'cmdline.txt'
+MESS:00:00:06.134038:0: brfs: File read: /mfs/sd/test.img
+MESS:00:00:06.136328:0: Loaded 'test.img' to 0x0 size 0x512000
+MESS:00:00:06.142206:0: uart: Set PL011 baud rate to 103448.300000 Hz
+MESS:00:00:06.150963:0: uart: Baud rate change done...
+MESS:00:00:06.152982:0:3201
+val[0]=0
+val[1]=309
+val[2]=352
+val[3]=1634
+val[4]=1965
+d[0>1]=309
+d[1>2]=43
+d[2>3]=1282
+d[3>4]=331
+expect: 01
+traced: 01
+
+  +
+SUCCESS 1 0:0
+  +
+Tests finished: ALL OK
+  3.81 [sdcard] pieeprom.upd not found
+  3.81 [sdcard] recover4.elf not found
+  3.81 [sdcard] recovery.elf not found
+  3.45 Read start4.elf bytes  2303104 hnd 0x4
+  3.49 Read fixup4.dat bytes     5512 hnd 0x4b
+  3.51 0x00d03115 0x00000000 0x00003fff
+  3.54 MEM GPU: 76 ARM: 948 TOTAL: 1024
+  3.91 Starting start4.elf @ 0xfec00200 partition 1
+  3.99 XHCI-STOP
+  3.99 xHC0 ver: 256 HCS: 05000420 fc000031 00e70004 HCC: 002841eb
+  4.00 USBSTS 18
+  4.00 PCI0 reset
+  4.01 +
+
+MESS:00:00:04.025050:0: arasan: arasan_emmc_open
+MESS:00:00:04.026706:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.146893:0: arasan: arasan_emmc_set_clock C0: 0x00800000 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 400000 max: 400000 delay: 5
+MESS:00:00:04.159762:0: arasan: arasan_emmc_set_clock C0: 0x00800f00 C1: 0x000e0047 emmc: 200000000 actual: 390625 div: 0x00000100 target: 400000 min: 390000 max: 400000 delay: 5
+MESS:00:00:04.206905:0: boot-part: 1 fs-type: 0
+MESS:00:00:04.208317:0: boot-part: 1 fs-type: 3
+MESS:00:00:04.212696:0: arasan: arasan_emmc_set_clock C0: 0x00800f06 C1: 0x000e0207 emmc: 200000000 actual: 50000000 div: 0x00000002 target: 50000000 min: 0 max: 50000000 delay: 1
+MESS:00:00:04.826421:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:04.829117:0: board: boardrev d03115 otp d03115
+MESS:00:00:04.834084:0: brfs: File read: 147 bytes
+MESS:00:00:04.862171:0: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:04.866680:0: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:04.884616:0: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:04.889117:0: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:04.896608:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.358316:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.363864:0: gpioman: gpioman_get_pin_num: pin DISPLAY_DSI_PORT not defined
+MESS:00:00:05.372882:0: *** Restart logging
+MESS:00:00:05.374673:0: brfs: File read: 147 bytes
+MESS:00:00:05.384363:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.389393:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.400011:0: hdmi: HDMI0:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.405035:0: hdmi: HDMI0:EDID giving up on reading EDID block 0
+MESS:00:00:05.410633:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.424418:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.429439:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.440056:0: hdmi: HDMI1:EDID error reading EDID block 0 attempt 0
+MESS:00:00:05.445086:0: hdmi: HDMI1:EDID giving up on reading EDID block 0
+MESS:00:00:05.450682:0: hdmi: HDMI:hdmi_get_state is deprecated, use hdmi_get_display_state instead
+MESS:00:00:05.459446:0: HDMI0: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.465093:0: HDMI1: hdmi_pixel_freq_limit: 300000000
+MESS:00:00:05.473103:0: dtb_file 'bcm2711-rpi-4-b.dtb'
+MESS:00:00:05.482755:0: brfs: File read: /mfs/sd/bcm2711-rpi-4-b.dtb
+MESS:00:00:05.486003:0: Loaded 'bcm2711-rpi-4-b.dtb' to 0x100 size 0xd619
+MESS:00:00:05.530271:0: brfs: File read: 54809 bytes
+MESS:00:00:05.534391:0: brfs: File read: /mfs/sd/config.txt
+MESS:00:00:05.557239:0: brfs: File read: 147 bytes
+MESS:00:00:05.559046:0: Failed to open command line file 'cmdline.txt'
+MESS:00:00:06.125076:0: brfs: File read: /mfs/sd/test.img
+MESS:00:00:06.127372:0: Loaded 'test.img' to 0x0 size 0x512000
+MESS:00:00:06.133248:0: uart: Set PL011 baud rate to 103448.300000 Hz
+MESS:00:00:06.142006:0: uart: Baud rate change done...
+MESS:00:00:06.144025:0:0231
+val[0]=0
+val[1]=275
+val[2]=318
+val[3]=1591
+val[4]=1921
+d[0>1]=275
+d[1>2]=43
+d[2>3]=1273
+d[3>4]=330
+expect: 01
+traced: 01
+
+  +
+SUCCESS 1 0:0
+  +
+Tests finished: ALL OK
+
+

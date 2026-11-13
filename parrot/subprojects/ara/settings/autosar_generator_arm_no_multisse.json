@@ -1,0 +1,22 @@
+{
+	"steps": [
+		"LoadOIL",
+		"AutosarGeneratorIR",
+		"IRWriter",
+		"Generator"
+	],
+	"LoadOIL": {
+		"log_level": "info"
+	},
+	"AutosarGeneratorIR": {
+		"log_level": "error",
+		"rename_syscalls": true
+	},
+	"Generator": {
+		"log_level": "warning",
+		"arch": "arm",
+		"os": "autosar",
+		"lock_elision": false,
+		"ipi_avoidance": false
+	}
+}
