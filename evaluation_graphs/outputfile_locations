@@ -1,0 +1,19 @@
+IPI Capture Script:
+/home/mourya/projects/Major_Project/scripts/capture_ipi.py
+Spinlock Capture Script:
+/home/mourya/projects/Major_Project/scripts/capture_serial.py
+Your PuTTY Session Log (5 consecutive boot runs):
+/home/mourya/projects/Major_Project/evaluation_graphs/putty_uart.txt
+Processed Statistical PMU Summary Log:
+/home/mourya/projects/Major_Project/evaluation_graphs/hardware_pmu_summary.txt
+Raw IPI PMU Capture Log:
+/home/mourya/projects/Major_Project/evaluation_graphs/clean_hardware_ipi_pmu_run.txt
+Master Graph Generator Script:
+/home/mourya/projects/Major_Project/scripts/generate_paper_perfect_figures.py
+Figure 12 (IPI Dispatch Phases):
+/home/mourya/projects/Major_Project/evaluation_graphs/Figure12_IPI_phases.png
+Figure 14 (Spinlock Phases):
+/home/mourya/projects/Major_Project/evaluation_graphs/Figure14_spinlock_phases.png
+Figure 13 (Cache Misses):
+/home/mourya/projects/Major_Project/evaluation_graphs/Figure13_cache_misses.png
+
